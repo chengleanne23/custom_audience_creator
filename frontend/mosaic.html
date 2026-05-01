@@ -1,0 +1,2054 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mosaic — Proxima Audience Builder</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0a0a0f;
+    --surface: #12121a;
+    --surface2: #1a1a26;
+    --border: #2a2a3d;
+    --accent: #7c6af7;
+    --accent2: #e8677a;
+    --accent3: #4fd1c5;
+    --text: #e8e8f0;
+    --muted: #6b6b8a;
+    --tag-bg: #1e1e30;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  /* Grain overlay */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+    opacity: 0.4;
+  }
+
+  header {
+    padding: 28px 40px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .logo-mark {
+    width: 36px;
+    height: 36px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 3px;
+  }
+  .logo-mark div {
+    border-radius: 2px;
+  }
+  .logo-mark div:nth-child(1) { background: var(--accent); }
+  .logo-mark div:nth-child(2) { background: var(--accent2); }
+  .logo-mark div:nth-child(3) { background: var(--accent3); opacity: 0.7; }
+  .logo-mark div:nth-child(4) { background: var(--accent); opacity: 0.4; }
+
+  .logo-text { font-size: 22px; font-weight: 800; letter-spacing: -0.5px; }
+  .logo-text span { color: var(--accent); }
+  .logo-sub { font-family: 'DM Mono', monospace; font-size: 10px; color: var(--muted); letter-spacing: 2px; text-transform: uppercase; margin-left: auto; }
+
+  main {
+    flex: 1;
+    padding: 40px;
+    max-width: 960px;
+    margin: 0 auto;
+    width: 100%;
+    position: relative;
+    z-index: 1;
+  }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 28px;
+    margin-bottom: 24px;
+  }
+
+  .card h2 {
+    font-size: 16px;
+    font-weight: 700;
+    margin-bottom: 18px;
+    color: var(--text);
+  }
+
+  .form-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-group {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, textarea, select {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    color: var(--text);
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    padding: 12px 14px;
+    width: 100%;
+    outline: none;
+    transition: border-color 0.2s;
+    resize: none;
+  }
+
+  input:focus, textarea:focus, select:focus {
+    border-color: var(--accent);
+  }
+
+  textarea { min-height: 90px; }
+
+  .btn {
+    background: var(--accent);
+    border: none;
+    border-radius: 8px;
+    color: #fff;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    padding: 14px 28px;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn:hover { background: #9580ff; transform: translateY(-1px); }
+  .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  .btn-ghost {
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--muted);
+    font-size: 12px;
+    padding: 8px 16px;
+  }
+  .btn-ghost:hover { border-color: var(--accent); color: var(--accent); background: transparent; }
+
+  /* Results */
+  #results { display: none; }
+
+  .package {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    margin-bottom: 16px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .package::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .package:nth-child(1)::before { background: linear-gradient(90deg, var(--accent), var(--accent2)); }
+  .package:nth-child(2)::before { background: linear-gradient(90deg, var(--accent3), var(--accent)); }
+  .package:nth-child(3)::before { background: linear-gradient(90deg, var(--accent2), var(--accent3)); }
+
+  .package-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 14px;
+    gap: 16px;
+  }
+
+  .package-name {
+    font-size: 18px;
+    font-weight: 800;
+    color: var(--text);
+  }
+
+  .package-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 4px 12px;
+    color: var(--accent);
+    white-space: nowrap;
+  }
+
+  .package-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 16px;
+  }
+
+  .segments-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 10px;
+  }
+
+  .segments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 16px;
+  }
+
+  .tag {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    padding: 5px 10px;
+    color: var(--text);
+  }
+
+  .tag.sheet-core { border-color: rgba(124, 106, 247, 0.4); color: #a89fff; }
+  .tag.sheet-shopper { border-color: rgba(79, 209, 197, 0.4); color: #7eeee8; }
+  .tag.sheet-lifestyle { border-color: rgba(232, 103, 122, 0.4); color: #f0a0ae; }
+
+  .rationale {
+    background: var(--surface2);
+    border-left: 3px solid var(--accent);
+    border-radius: 0 6px 6px 0;
+    font-size: 13px;
+    line-height: 1.6;
+    color: var(--muted);
+    padding: 12px 16px;
+  }
+
+  /* Loading */
+  .loading {
+    display: none;
+    align-items: center;
+    gap: 12px;
+    padding: 24px;
+    color: var(--muted);
+    font-size: 14px;
+  }
+
+  .spinner {
+    width: 20px; height: 20px;
+    border: 2px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .results-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+  }
+
+  .error-msg {
+    background: rgba(232,103,122,0.1);
+    border: 1px solid rgba(232,103,122,0.3);
+    border-radius: 8px;
+    color: var(--accent2);
+    font-size: 13px;
+    padding: 14px 18px;
+    display: none;
+  }
+
+  /* Save button on each package */
+  .btn-save {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-save:hover { border-color: var(--accent3); color: var(--accent3); }
+  .btn-save.saved { border-color: var(--accent3); color: var(--accent3); opacity: 0.6; cursor: default; }
+
+  /* History drawer */
+  #history-section {
+    border-top: 1px solid var(--border);
+    margin-top: 40px;
+    padding-top: 28px;
+  }
+
+  .history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .history-header:hover .history-title { color: var(--accent); }
+
+  .history-title {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--text);
+    transition: color 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .history-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 100px;
+    padding: 2px 10px;
+    color: var(--accent);
+  }
+
+  .history-chevron {
+    color: var(--muted);
+    font-size: 12px;
+    transition: transform 0.2s;
+  }
+  .history-chevron.open { transform: rotate(180deg); }
+
+  #history-list { display: none; }
+  #history-list.open { display: block; }
+
+  .history-empty {
+    color: var(--muted);
+    font-size: 13px;
+    font-style: italic;
+    padding: 12px 0;
+  }
+
+  .history-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 16px 20px;
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    gap: 12px;
+    align-items: start;
+  }
+
+  .history-item-brand {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 4px;
+  }
+
+  .history-item-name {
+    font-size: 14px;
+    font-weight: 700;
+    margin-bottom: 8px;
+  }
+
+  .history-item-segments {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 5px;
+  }
+
+  .history-tag {
+    background: var(--tag-bg);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    padding: 3px 7px;
+    color: var(--muted);
+  }
+
+  .history-meta {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    white-space: nowrap;
+    text-align: right;
+  }
+
+  .btn-delete {
+    background: none;
+    border: none;
+    color: var(--muted);
+    cursor: pointer;
+    font-size: 14px;
+    padding: 2px 6px;
+    margin-top: 6px;
+    transition: color 0.2s;
+    display: block;
+    margin-left: auto;
+  }
+  .btn-delete:hover { color: var(--accent2); }
+
+  .history-item { cursor: pointer; transition: border-color 0.15s; }
+  .history-item.selected { border-color: var(--accent); background: rgba(124,106,247,0.06); }
+  .history-item:hover { border-color: var(--muted); }
+
+  .history-checkbox {
+    width: 16px; height: 16px;
+    accent-color: var(--accent);
+    cursor: pointer;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  #history-sql-btn {
+    display: none;
+    font-size: 11px;
+    padding: 6px 12px;
+    border: 1px solid var(--accent);
+    color: var(--accent);
+    background: transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    font-family: 'Syne', sans-serif;
+    font-weight: 700;
+    letter-spacing: 0.5px;
+    transition: all 0.2s;
+  }
+  #history-sql-btn:hover { background: rgba(124,106,247,0.1); }
+
+  .toast {
+    position: fixed;
+    bottom: 28px;
+    right: 28px;
+    background: var(--surface2);
+    border: 1px solid var(--accent3);
+    border-radius: 8px;
+    color: var(--accent3);
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    padding: 12px 20px;
+    z-index: 300;
+    opacity: 0;
+    transform: translateY(8px);
+    transition: all 0.25s;
+    pointer-events: none;
+  }
+  .toast.show { opacity: 1; transform: translateY(0); }
+
+  .pkg-more-loading {
+    background: var(--surface);
+    border: 1px dashed var(--border);
+    border-radius: 12px;
+    padding: 24px;
+    text-align: center;
+    color: var(--muted);
+    font-size: 13px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+
+  .btn-regen {
+    background: transparent;
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--muted);
+    cursor: pointer;
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 5px 12px;
+    transition: all 0.2s;
+    text-transform: uppercase;
+  }
+  .btn-regen:hover { border-color: var(--accent); color: var(--accent); }
+
+  /* Export view */
+  .export-pkg {
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 20px;
+    margin-bottom: 20px;
+  }
+  .export-pkg:last-child { border-bottom: none; margin-bottom: 0; }
+  .export-pkg-name { font-size: 16px; font-weight: 800; margin-bottom: 6px; color: var(--text); }
+  .export-pkg-desc { font-size: 13px; color: var(--muted); line-height: 1.6; margin-bottom: 10px; }
+  .export-pkg-count { font-family: 'DM Mono', monospace; font-size: 11px; color: var(--accent3); background: var(--tag-bg); border: 1px solid var(--border); border-radius: 4px; padding: 3px 10px; display: inline-block; }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo-mark">
+    <div></div><div></div><div></div><div></div>
+  </div>
+  <div class="logo-text">Mo<span>saic</span></div>
+  <div class="logo-sub">Proxima Audience Builder</div>
+</header>
+
+<main>
+
+  <div class="card">
+    <div class="section-label">Campaign Brief</div>
+    <h2>Tell me about the campaign</h2>
+
+    <div class="form-row">
+      <div class="form-group">
+        <label>Brand / Product</label>
+        <input type="text" id="brand" placeholder="e.g. Nordic Naturals" />
+      </div>
+      <div class="form-group">
+        <label>Campaign <span style="color:var(--muted);font-weight:400">(optional)</span></label>
+        <input type="text" id="campaign" placeholder="e.g. Omega 3, Vitamin D, Always On" />
+      </div>
+    </div>
+    <select id="channel" style="display:none"></select>
+
+    <div class="form-group" style="margin-bottom:16px">
+      <label>Target Consumer Description</label>
+      <textarea id="consumer" placeholder="e.g. Health-conscious adults 30–55, interested in wellness and supplements, likely female, non-discount shoppers, household purchasers..."></textarea>
+    </div>
+
+    <div class="form-group" style="margin-bottom: 24px">
+      <label>Additional Context (optional)</label>
+      <input type="text" id="context" placeholder="e.g. Q3 push, scale priority, avoid deal-seekers, CTV match rate important..." />
+    </div>
+
+    <div style="display:flex; gap:12px; align-items:center">
+      <button class="btn" onclick="generateAudiences()">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
+        Generate Audience Packages
+      </button>
+      <button class="btn btn-ghost" onclick="clearForm()">Clear</button>
+    </div>
+  </div>
+
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <span class="loading-text">Researching brand...</span>
+  </div>
+
+  <div class="error-msg" id="error"></div>
+
+  <div id="results">
+    <div class="results-header">
+      <div class="section-label">Recommended Packages</div>
+      <div style="display:flex;gap:8px;">
+        <button class="btn btn-ghost" id="more-options-btn" onclick="getMoreOptions()" style="display:none">+ More Options</button>
+        <button class="btn btn-ghost" id="sql-btn" onclick="openSQL()" style="display:none">⌗ Generate SQL</button>
+        <button class="btn btn-ghost" id="export-btn" onclick="openExport()" style="display:none">↗ Client Export</button>
+        <button class="btn btn-ghost" onclick="generateAudiences()">↺ Regenerate All</button>
+      </div>
+    </div>
+    <div id="packages-container"></div>
+  </div>
+
+  <!-- Export modal -->
+  <div id="export-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:90%;max-width:680px;max-height:85vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:24px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Client Export</div>
+          <div style="font-size:16px;font-weight:700;" id="export-title">Saved Packages</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" id="copy-csv-btn" onclick="downloadCSV()" style="font-size:12px;">⎘ Copy CSV</button>
+          <button class="btn btn-ghost" onclick="closeExport()" style="font-size:12px;">✕ Close</button>
+        </div>
+      </div>
+      <div style="padding:24px 28px;overflow-y:auto;flex:1;" id="export-body"></div>
+    </div>
+  </div>
+
+  <!-- SQL Modal -->
+  <div id="sql-modal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:200;align-items:center;justify-content:center;">
+    <div style="background:var(--surface);border:1px solid var(--border);border-radius:16px;width:92%;max-width:820px;max-height:88vh;display:flex;flex-direction:column;overflow:hidden;">
+      <div style="padding:20px 28px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center;">
+        <div>
+          <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:4px;">Snowflake SQL</div>
+          <div style="font-size:16px;font-weight:700;" id="sql-title">Package Build Query</div>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost" id="snowflake-run-btn" onclick="runOnSnowflake()" style="font-size:12px;">▶ Run on Snowflake</button>
+          <button class="btn btn-ghost" onclick="saveSQLToBuild()" style="font-size:12px;">⬇ Save to Builds</button>
+          <button class="btn btn-ghost" onclick="copySQL()" style="font-size:12px;">⎘ Copy</button>
+          <button class="btn btn-ghost" onclick="closeSQL()" style="font-size:12px;">✕ Close</button>
+        </div>
+      </div>
+      <div style="padding:20px 28px;overflow-y:auto;flex:1;">
+        <textarea id="sql-body" spellcheck="false" style="font-family:'DM Mono',monospace;font-size:11px;line-height:1.7;color:var(--text);white-space:pre;background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:20px;margin:0;width:100%;min-height:320px;resize:vertical;outline:none;display:block;"></textarea>
+        <pre id="sql-counts" style="display:none;font-family:'DM Mono',monospace;font-size:12px;line-height:1.8;color:var(--accent3);background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:16px;margin-top:12px;"></pre>
+      </div>
+    </div>
+  </div>
+
+  <div id="history-section">
+    <div class="history-header" onclick="toggleHistory()">
+      <div class="history-title">
+        Saved Packages
+        <span class="history-count" id="history-count">0</span>
+      </div>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button class="btn btn-ghost" id="history-sql-btn" onclick="event.stopPropagation();generateSQLFromHistory()">⌗ SQL from Selected</button>
+        <button class="btn btn-ghost" id="history-download-btn" onclick="event.stopPropagation();downloadHistory()" style="display:none;font-size:11px;padding:6px 12px;">⎘ View / Copy CSV</button>
+        <button class="btn btn-ghost" id="history-deleteall-btn" onclick="event.stopPropagation();deleteAllPackages()" style="display:none;font-size:11px;padding:6px 12px;border-color:rgba(232,103,122,0.4);color:var(--accent2);">✕ Delete All</button>
+        <span class="history-chevron" id="history-chevron">▼</span>
+      </div>
+    </div>
+    <div id="history-list">
+      <div class="history-empty" id="history-empty">No saved packages yet. Generate some and hit Save on the ones you like.</div>
+    </div>
+  </div>
+
+</main>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const AUDIENCES = [{"name":"Female Food Shopper","sheet":"Shopper360 Audiences"},{"name":"90 Day Recency Shopper","sheet":"Shopper360 Audiences"},{"name":"Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Beauty Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Beauty Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Beauty Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Beauty Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Beauty Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Beauty Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Shopper","sheet":"Shopper360 Audiences"},{"name":"Black Friday & Cyber Monday Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Children Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Children Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Children Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Children Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Children Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Children Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Discount Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Shopper","sheet":"Shopper360 Audiences"},{"name":"Discount Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Fashion Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Fashion Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Fashion Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Fashion Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Fashion Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Fashion Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Shopper","sheet":"Shopper360 Audiences"},{"name":"Fathers Day Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Shopper","sheet":"Shopper360 Audiences"},{"name":"Female Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Food Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Food Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Food Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Food Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Food Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Food Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Free Shipping Shopper","sheet":"Shopper360 Audiences"},{"name":"Health Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Health Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Health Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Health Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Health Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Health Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Children Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Food Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Health Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Home Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Shopper","sheet":"Shopper360 Audiences"},{"name":"High Average Order Value Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Children Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Food Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Health Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Home Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Shopper","sheet":"Shopper360 Audiences"},{"name":"High Lifetime Value Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Hobbies Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Hobbies Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Hobbies Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Hobbies Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Hobbies Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Hobbies Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Home Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Home Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Home Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Home Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Home Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Home Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Male Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Shopper","sheet":"Shopper360 Audiences"},{"name":"Male Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Shopper","sheet":"Shopper360 Audiences"},{"name":"Mothers Day Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"No Discount Shopper","sheet":"Shopper360 Audiences"},{"name":"Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Pets Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Pets Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Pets Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Pets Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Pets Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Pets Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Purchase Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Subscription Shopper","sheet":"Shopper360 Audiences"},{"name":"Travel Active Shopper","sheet":"Shopper360 Audiences"},{"name":"Travel Avid Shopper","sheet":"Shopper360 Audiences"},{"name":"Travel Occasional Shopper","sheet":"Shopper360 Audiences"},{"name":"Travel Shopper - 90 Day Recency","sheet":"Shopper360 Audiences"},{"name":"Travel Shopper with Free Shipping","sheet":"Shopper360 Audiences"},{"name":"Travel Shopper with No Discount","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Shopper","sheet":"Shopper360 Audiences"},{"name":"Valentines Day Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekday Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Beauty Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Children Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Fashion Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Food Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Health Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Hobbies Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Home Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Pets Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Shopper","sheet":"Shopper360 Audiences"},{"name":"Weekend Travel Shopper","sheet":"Shopper360 Audiences"},{"name":"Animal & Pet Supplies","sheet":"Core Audiences"},{"name":"Apparel & Accessories","sheet":"Core Audiences"},{"name":"Arts & Entertainment","sheet":"Core Audiences"},{"name":"Automobile","sheet":"Core Audiences"},{"name":"Beauty","sheet":"Core Audiences"},{"name":"Electronics","sheet":"Core Audiences"},{"name":"Food & Beverages","sheet":"Core Audiences"},{"name":"Health","sheet":"Core Audiences"},{"name":"Home & Garden","sheet":"Core Audiences"},{"name":"Sporting Goods","sheet":"Core Audiences"},{"name":"Travel","sheet":"Core Audiences"},{"name":"Young Family Essentials","sheet":"Core Audiences"},{"name":"DTC Recent Shopper Segment","sheet":"Core Audiences"},{"name":"DTC Shopper Segment","sheet":"Core Audiences"},{"name":"DTC High LTV","sheet":"Core Audiences"},{"name":"DTC High AOV","sheet":"Core Audiences"},{"name":"Frequent Shopper","sheet":"Core Audiences"},{"name":"MultiBrand Shopper","sheet":"Core Audiences"},{"name":"Subscription Shopper","sheet":"Core Audiences"},{"name":"Discount","sheet":"Core Audiences"},{"name":"Non-Discount","sheet":"Core Audiences"},{"name":"Clothing Accessory Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Clothing Accessory Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Clothing Accessory Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Clothing Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Clothing Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Clothing Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Handbag, Wallet & Case Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Handbag, Wallet & Case Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Handbag, Wallet & Case Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Jewelry Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Jewelry Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Jewelry Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Shoe Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Shoe Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Shoe Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Baby Gift Set Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Baby Gift Set Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Baby Gift Set Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Baby Transport Accessory Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Baby Transport Accessory Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Baby Transport Accessory Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Diapering Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Diapering Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Diapering Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Nursing & Feeding Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Nursing & Feeding Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Nursing & Feeding Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Swaddling & Receiving Blanket Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Swaddling & Receiving Blanket Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Swaddling & Receiving Blanket Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Beverage Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Beverage Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Beverage Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Food Item Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Food Item Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Food Item Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Tobacco Product Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Tobacco Product Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Tobacco Product Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Health Care Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Health Care Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Health Care Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Jewelry Cleaning & Care Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Jewelry Cleaning & Care Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Jewelry Cleaning & Care Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Personal Care Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Personal Care Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Personal Care Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Decor Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Decor Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Decor Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Household Supply Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Household Supply Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Household Supply Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Kitchen & Dining Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Kitchen & Dining Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Kitchen & Dining Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Lawn & Garden Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Lawn & Garden Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Lawn & Garden Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Plant Purchasers - 30 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Plant Purchasers - 60 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"Plant Purchasers - 90 Day Recency","sheet":"Product & Lifestyle Audiences"},{"name":"anime_&_manga_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"contemporary_art_collectors_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"gothic_&_alternative_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"scalp_care_&_health_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"tennis_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"parents_of_tweens_&_teens_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"preppy_&_coastal_style_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"sleep_optimization_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"trade_craft_appreciators_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"sustainable_fashion_&_beauty_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"pop-maximalist_beauty_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"tactical_aesthetic_adopters_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"new_parents_&_postpartum_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"ayurvedic_medicine_approach_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"pop_culture_&_fandom_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"home_coffee_&_tea_rituals_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"plastic-free_&_zero-waste_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"made_in_usa_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"hormone_and_cycle_management_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"gourmet_cooking_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"football_&_soccer_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"hunting_&_fishing_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"millennial_misanthropy_merchandise_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"menopause_support_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"running_&_endurance_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"psychedelic_wellness_&_consciousness_explorers_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"women's_hair_thinning_&_growth_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"home_mixologists_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"gaming_community_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"golf_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"home_entertaining_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"ethical_&_humane_food_sourcing_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"comic_book_collectors_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"parents_of_toddlers_&_young_children_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"gut_health_&_digestion_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"modern_heritage_luxe_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"foot_pain_relief_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"functional_mushroom_&_adaptogen_users_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"home_studio_producers_&_musicians_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"premium_loungewear_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"global_culinary_adventurers_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"masculine_grooming_culture_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"joint_pain_&_inflammation_relief_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"chronic_condition_management_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"water_sports_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"supports_black-owned_brands_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"vaccination_alternatives_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"clean_&_non-toxic_obsession_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"keto_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"ingestible_beauty_&_collagen_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"fiber_arts_&_needlecraft_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"astrology_&_new_age_spirituality_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"outdoor_family_recreation_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"new_york_socialite_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"vinyl_collectors_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"hands-on_parents_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"longevity_&_anti-aging_science_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"high-intensity_&_bodybuilding_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"christian_symbolic_gear_enthusiasts_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"performance_ath-tech_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"modern_latinx_lifestyle_&_culture_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"cruelty-free_&_vegan_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"insta_luxe_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"automotive_lifestyle_enthusiasts_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"family-focused_activities_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"workleisure_&_modern_business_casual_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"herbal_medicine_focus_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"urban_inked_creative_class_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"grunge_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"cannabis_for_wellness_&_relief_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"yoga_&_pilates_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"natural_&_textured_hair_care_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"personalized_&_sentimental_gifting_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"tiki_culture_&_retro_escapism_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"doctor-recommended_solutions_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"cats_owners_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"indian_diaspora_&_culture_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"modern_rebel_americana_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"boxing_&_combat_sports_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"essential_oils_as_medicine_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"aging-in-place_support_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"mindfulness_&_meditation_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"east_asian_diaspora_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"gender-affirming_&_identity-positive_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"modern_western_style_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"home_cooking_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"tech-forward_wellness_devices_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"bohemian_&_eclectic_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"athletic_performance_&_recovery_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"tech-sleek_utility_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"neurodiversity_&_sensory_support_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"weight_management_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"pinterest_perfect_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"target_chic_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"minimalist_luxe_essentials_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"acne_solutions_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"trend_heavy_fast-fashion_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"supports_female-founded_brands_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"organic_lifestyle_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"demonstrative_patriots_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"expectant_parents_&_pregnancy_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"regional_identity_&_state_pride_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"intimate_care_&_hygiene_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"animal-based_&_carnivore_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"self-grooming_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"fertility_&_conception_journey_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"scrapbookers,_journalers_&_planners_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"home_decor_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"data-driven_wellness_&_at-home_testing_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"crossfit_&_functional_training_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"stem_&_steam_learning_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"y2k_futurism_inspired_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"snow_sports_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"traditional_chinese_medicine_(tcm)_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"crystal_healing_&_energy_work_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"afrocentric_style_&_culture_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"country_club_style_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"at-home_manscaping_&_body_grooming_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"adderall_alternative_seeker_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"stress_&_anxiety_relief_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"dog_owners_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"it_girl_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"hiking_&_camping_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"detox_&_cleanse_obsession_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"paleo_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"gluten-free_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"emf_protection_&_electromagnetic_sensitivity_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"sports_memorabilia_collectors_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"chemical-free_seekers_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"alternative_wellness_seekers_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"clinical_research-driven_wellness_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"parents_of_school-age_children_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"alcohol_alternatives_&_non-alc_lifestyle_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"fair_trade_supporters_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"heritage_workwear_enthusiasts_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"montessori_principles_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"meal_prepping_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"working_mothers_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"ranching_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"hawaiian_culture_&_style_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"second_amendment_lifestyle_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"men's_hair_loss_solutions_interest_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"supports_veteran-owned_brands_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"premium_meat_connoisseurs_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"modest-fashion_&_halal-beauty_fans_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"diy_home_improvement_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"masculine_americana_heritage_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"organic-only_lifestyle_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"game_day_glam_&_team_spirit_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"at-home_anti-aging_treatments_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"biohacking_&_quantified_self_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"rodeo_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"diy_beauty_&_at-home_salon_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"travel_&_wanderlust_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"truth-seeking_wellness_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"cognitive_performance_&_nootropics_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"baddie_&_urban_glam_L730D_lookback","sheet":"Product & Lifestyle Audiences"},{"name":"streetwear_&_urban_L730D_lookback","sheet":"Product & Lifestyle Audiences"}];
+
+function sheetClass(sheet) {
+  if (sheet === 'Core Audiences') return 'sheet-core';
+  if (sheet === 'Shopper360 Audiences') return 'sheet-shopper';
+  return 'sheet-lifestyle';
+}
+
+function sheetShort(sheet) {
+  if (sheet === 'Core Audiences') return 'Core';
+  if (sheet === 'Shopper360 Audiences') return 'S360';
+  return 'P&L';
+}
+
+function safeCopyToClipboard(text, successMsg) {
+  // navigator.clipboard doesn't work in sandboxed iframes
+  // Use a hidden textarea + execCommand as fallback
+  try {
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;top:-9999px;left:-9999px;opacity:0;';
+    document.body.appendChild(ta);
+    ta.focus();
+    ta.select();
+    const ok = document.execCommand('copy');
+    document.body.removeChild(ta);
+    if (ok) { showToast(successMsg || 'Copied!'); return; }
+  } catch(e) {}
+  // If both fail, show text in a modal the user can manually copy
+  showCopyFallbackModal(text);
+}
+
+function showCopyFallbackModal(text) {
+  let modal = document.getElementById('copy-fallback-modal');
+  if (!modal) {
+    modal = document.createElement('div');
+    modal.id = 'copy-fallback-modal';
+    modal.style.cssText = 'display:none;position:fixed;inset:0;background:rgba(0,0,0,0.7);z-index:400;align-items:center;justify-content:center;';
+    modal.innerHTML = `
+      <div style="background:var(--surface);border:1px solid var(--border);border-radius:12px;width:90%;max-width:600px;padding:24px;display:flex;flex-direction:column;gap:12px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);">Select All (Ctrl+A) → Copy (Ctrl+C) → Paste into Google Sheets</div>
+        <textarea id="copy-fallback-text" style="background:var(--surface2);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:12px;width:100%;height:200px;resize:none;" readonly></textarea>
+        <button class="btn btn-ghost" onclick="document.getElementById('copy-fallback-modal').style.display='none'" style="align-self:flex-end;">Close</button>
+      </div>`;
+    document.body.appendChild(modal);
+    modal.addEventListener('click', e => { if (e.target === modal) modal.style.display = 'none'; });
+  }
+  document.getElementById('copy-fallback-text').value = text;
+  modal.style.display = 'flex';
+  setTimeout(() => {
+    const ta = document.getElementById('copy-fallback-text');
+    ta.focus(); ta.select();
+  }, 100);
+}
+
+function safeParseJSON(text) {
+  if (!text) return null;
+  // Strip markdown fences
+  let clean = text.replace(/```json|```/g, '').trim();
+  // Find first { and last } to extract just the JSON object
+  const start = clean.indexOf('{');
+  const end = clean.lastIndexOf('}');
+  if (start === -1 || end === -1) return null;
+  clean = clean.slice(start, end + 1);
+  // Remove control characters that break JSON parsing
+  clean = clean.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, '');
+  try {
+    return JSON.parse(clean);
+  } catch(e) {
+    console.error('JSON parse failed:', e.message, '\nRaw:', clean.slice(0, 200));
+    return null;
+  }
+}
+
+function setLoadingMsg(msg) {
+  document.querySelector('#loading span, #loading').childNodes.forEach(n => {
+    if (n.nodeType === 3) n.textContent = msg;
+  });
+  const el = document.getElementById('loading');
+  // just set text via a child span
+  let span = el.querySelector('.loading-text');
+  if (!span) {
+    span = document.createElement('span');
+    span.className = 'loading-text';
+    el.appendChild(span);
+  }
+  span.textContent = msg;
+}
+
+async function researchBrand(brand) {
+  // Use Claude with web_search to look up the brand
+  const response = await fetch('/api/claude/messages', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 500,
+      tools: [{ type: 'web_search_20250305', name: 'web_search' }],
+      system: 'You are a brand research assistant. Research the given brand and return a concise JSON summary. Respond ONLY with valid JSON, no markdown, no preamble. Format: {"category": "...", "price_point": "budget|mid|premium|luxury", "target_demo": "...", "key_positioning": "...", "product_types": "...", "found": true}. If you cannot find meaningful info, return {"found": false}.',
+      messages: [{ role: 'user', content: `Research this brand for an ad campaign: "${brand}". What is their product category, target consumer, price point, and brand positioning? Be concise.` }]
+    })
+  });
+  const data = await response.json();
+  // Find text block (web_search may add tool_use blocks)
+  const textBlock = data.content?.find(b => b.type === 'text');
+  if (!textBlock) return null;
+  try {
+    const clean = textBlock.text.replace(/\`\`\`json|\`\`\`/g, '').trim();
+    return JSON.parse(clean);
+  } catch(e) { return null; }
+}
+
+async function generateAudiences() {
+  const brand = document.getElementById('brand').value.trim();
+  const campaign = document.getElementById('campaign').value.trim();
+  const consumer = document.getElementById('consumer').value.trim();
+  const channel = document.getElementById('channel').value;
+  const context = document.getElementById('context').value.trim();
+
+  if (!brand) {
+    showError('Please fill in at least Brand / Product.');
+    return;
+  }
+
+  hideError();
+  document.getElementById('results').style.display = 'none';
+  const loading = document.getElementById('loading');
+  loading.style.display = 'flex';
+
+  // Step 1: Research the brand
+  let brandContext = null;
+  let loadingText = loading.querySelector('.loading-text') || (() => {
+    const s = document.createElement('span'); s.className = 'loading-text';
+    loading.appendChild(s); return s;
+  })();
+  loadingText.textContent = `Researching ${brand}...`;
+
+  try { brandContext = await researchBrand(brand); } catch(e) {}
+
+  loadingText.textContent = 'Building your audience packages...';
+
+  const audienceList = AUDIENCES.map(a => `- ${a.name} [${sheetShort(a.sheet)}]`).join('\n');
+
+  let brandResearchSection = '';
+  if (brandContext?.found) {
+    brandResearchSection = `
+Brand Research (from web):
+- Category: ${brandContext.category || 'N/A'}
+- Price Point: ${brandContext.price_point || 'N/A'}
+- Target Demo: ${brandContext.target_demo || 'N/A'}
+- Positioning: ${brandContext.key_positioning || 'N/A'}
+- Products: ${brandContext.product_types || 'N/A'}`;
+  }
+
+  const systemPrompt = `You are an expert audience strategist at Proxima, a DTC-native data platform. 
+Your job is to recommend audience segment packages from Proxima's taxonomy for ad campaigns.
+
+You will be given a campaign brief (and optionally brand research) and must select segments from the available library to build 3 distinct audience packages.
+
+Rules:
+- Only use segment names EXACTLY as they appear in the library
+- Each package should have 3-6 segments that work together logically
+- Packages should be differentiated from each other (e.g. one broad/scale, one high-intent/precision, one niche/lifestyle)
+- Use brand research to inform segment selection when provided
+- Segment tags are: [Core] = Core Audiences, [S360] = Shopper360 Audiences, [P&L] = Product & Lifestyle Audiences
+
+Respond ONLY with valid JSON, no markdown, no preamble. Format:
+{
+  "packages": [
+    {
+      "name": "Package Name",
+      "description": "One sentence description of who this package reaches",
+      "rationale": "2-3 sentences on why this package fits the brand and campaign strategically. Do NOT list or reference individual segment names — explain the audience strategy and why it works for this specific brand.",
+      "segments": ["Exact Segment Name", "Exact Segment Name"]
+    }
+  ]
+}`;
+
+  const userPrompt = `Campaign Brief:
+Brand/Product: ${brand}${campaign ? ` — ${campaign}` : ''}
+Channel: ${channel || 'Not specified'}
+Target Consumer: ${consumer || 'Not specified'}
+${context ? `Additional Context: ${context}` : ''}
+${brandResearchSection}
+
+Available Audience Library:
+${audienceList}
+
+Build 3 audience packages for this campaign.`;
+
+  try {
+    const response = await fetch('/api/claude/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 1000,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+
+    const data = await response.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    const parsed = safeParseJSON(text);
+    if (!parsed?.packages) throw new Error('Invalid response structure');
+
+    loading.style.display = 'none';
+    renderPackages(parsed.packages, brandContext);
+  } catch (err) {
+    loading.style.display = 'none';
+    showError('Error generating audience packages — please try again.');
+    console.error(err);
+  }
+}
+
+let currentBrand = '';
+let currentCampaign = '';
+let currentChannel = '';
+
+// Track all current packages for export/regen
+let allPackages = [];
+let lastBrandContext = null;
+let lastBriefContext = {};
+
+function appendPackageCard(pkg, globalIdx) {
+  const container = document.getElementById('packages-container');
+  const segmentTags = pkg.segments.map(seg => {
+    const found = AUDIENCES.find(a => a.name === seg);
+    const cls = found ? sheetClass(found.sheet) : '';
+    const badge = found ? sheetShort(found.sheet) : '?';
+    return `<span class="tag ${cls}" title="${found?.sheet || ''}">${seg} <span style="opacity:0.5">${badge}</span></span>`;
+  }).join('');
+
+  const cardId = 'pkg-card-' + globalIdx;
+  const saveBtnId = 'save-btn-' + globalIdx;
+  const div = document.createElement('div');
+  div.className = 'package';
+  div.id = cardId;
+  div.innerHTML = `
+    <div class="package-header">
+      <div class="package-name">${pkg.name}</div>
+      <div style="display:flex;gap:8px;align-items:center">
+        <button class="btn-regen" onclick="regenSinglePackage(${globalIdx})" title="Get a different option for this slot">↺</button>
+        <button class="btn-save" id="${saveBtnId}" onclick="savePackageByIndex(${globalIdx})">+ Save</button>
+      </div>
+    </div>
+    <div class="package-desc">${pkg.description}</div>
+    <div class="segments-label">Segments</div>
+    <div class="segments">${segmentTags}</div>
+    <div class="rationale">${pkg.rationale}</div>
+  `;
+  container.appendChild(div);
+}
+
+function renderPackages(packages, brandContext) {
+  currentBrand = document.getElementById('brand').value.trim();
+  currentCampaign = document.getElementById('campaign').value.trim();
+  currentChannel = document.getElementById('channel').value;
+  allPackages = [...packages];
+  lastBrandContext = brandContext;
+  lastBriefContext = {
+    brand: currentBrand,
+    campaign: currentCampaign,
+    channel: currentChannel,
+    consumer: document.getElementById('consumer').value.trim(),
+    context: document.getElementById('context').value.trim()
+  };
+
+  const container = document.getElementById('packages-container');
+  container.innerHTML = '';
+
+  // Show brand research pill
+  if (brandContext?.found) {
+    const pill = document.createElement('div');
+    pill.style.cssText = 'background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:16px;font-size:12px;color:var(--muted);display:flex;gap:16px;flex-wrap:wrap;align-items:center;';
+    pill.innerHTML = `<span style="color:var(--accent3);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;text-transform:uppercase;">Brand Research</span>` +
+      (brandContext.category ? `<span>📦 ${brandContext.category}</span>` : '') +
+      (brandContext.price_point ? `<span>💰 ${brandContext.price_point}</span>` : '') +
+      (brandContext.target_demo ? `<span>👤 ${brandContext.target_demo}</span>` : '') +
+      (brandContext.key_positioning ? `<span style="color:var(--text)">${brandContext.key_positioning}</span>` : '');
+    container.appendChild(pill);
+  }
+
+  packages.forEach((pkg, i) => appendPackageCard(pkg, i));
+
+  document.getElementById('results').style.display = 'block';
+  document.getElementById('more-options-btn').style.display = '';
+  document.getElementById('sql-btn').style.display = '';
+  document.getElementById('export-btn').style.display = '';
+  document.getElementById('results').scrollIntoView({ behavior: 'smooth', block: 'start' });
+}
+
+async function regenSinglePackage(idx) {
+  const card = document.getElementById('pkg-card-' + idx);
+  if (!card) return;
+
+  // Replace card with loading placeholder
+  const placeholder = document.createElement('div');
+  placeholder.className = 'pkg-more-loading';
+  placeholder.id = 'pkg-card-' + idx;
+  placeholder.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Getting a different option...';
+  card.replaceWith(placeholder);
+
+  const existingNames = allPackages.map(p => p.name).filter((_, i2) => i2 !== idx);
+  const newPkg = await fetchSinglePackage(existingNames);
+
+  if (newPkg) {
+    allPackages[idx] = newPkg;
+    const newCard = document.createElement('div');
+    newCard.id = 'pkg-card-' + idx; // temp, will be replaced
+    placeholder.replaceWith(newCard);
+    // Re-render just this card
+    const segmentTags = newPkg.segments.map(seg => {
+      const found = AUDIENCES.find(a => a.name === seg);
+      const cls = found ? sheetClass(found.sheet) : '';
+      const badge = found ? sheetShort(found.sheet) : '?';
+      return `<span class="tag ${cls}" title="${found?.sheet || ''}">${seg} <span style="opacity:0.5">${badge}</span></span>`;
+    }).join('');
+    newCard.className = 'package';
+    newCard.innerHTML = `
+      <div class="package-header">
+        <div class="package-name">${newPkg.name}</div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <button class="btn-regen" onclick="regenSinglePackage(${idx})" title="Get a different option">↺</button>
+          <button class="btn-save" id="save-btn-${idx}" onclick="savePackageByIndex(${idx})">+ Save</button>
+        </div>
+      </div>
+      <div class="package-desc">${newPkg.description}</div>
+      <div class="segments-label">Segments</div>
+      <div class="segments">${segmentTags}</div>
+      <div class="rationale">${newPkg.rationale}</div>
+    `;
+  } else {
+    placeholder.textContent = 'Could not generate a new option. Try again.';
+    setTimeout(() => placeholder.replaceWith(card), 2000);
+  }
+}
+
+async function getMoreOptions() {
+  const existingNames = allPackages.map(p => p.name);
+  const container = document.getElementById('packages-container');
+
+  const placeholder = document.createElement('div');
+  placeholder.className = 'pkg-more-loading';
+  placeholder.innerHTML = '<div class="spinner" style="width:16px;height:16px;border-width:2px;"></div> Generating more options...';
+  container.appendChild(placeholder);
+
+  const newPkg = await fetchSinglePackage(existingNames);
+  placeholder.remove();
+
+  if (newPkg) {
+    const newIdx = allPackages.length;
+    allPackages.push(newPkg);
+    appendPackageCard(newPkg, newIdx);
+  } else {
+    showToast('Could not generate more options. Try again.');
+  }
+}
+
+async function fetchSinglePackage(excludeNames) {
+  const audienceList = AUDIENCES.map(a => `- ${a.name} [${sheetShort(a.sheet)}]`).join('\n');
+  const excludeStr = excludeNames.length ? `\nDo NOT suggest packages already named: ${excludeNames.join(', ')}` : '';
+
+  let brandResearchSection = '';
+  if (lastBrandContext?.found) {
+    brandResearchSection = `Brand Research: ${lastBrandContext.category || ''} | ${lastBrandContext.price_point || ''} | ${lastBrandContext.target_demo || ''} | ${lastBrandContext.key_positioning || ''}`;
+  }
+
+  const systemPrompt = `You are an expert audience strategist at Proxima, a DTC-native data platform. Generate ONE new audience package (different from any already suggested) for the given campaign brief. Only use segment names EXACTLY as they appear in the library. For the rationale, explain why the package fits the brand and campaign strategically — do NOT list or reference individual segment names. Respond ONLY with valid JSON, no markdown: {"name":"...","description":"...","rationale":"...","segments":["..."]}`;
+
+  const userPrompt = `Campaign: ${lastBriefContext.brand}${lastBriefContext.campaign ? ` — ${lastBriefContext.campaign}` : ''} | Channel: ${lastBriefContext.channel || 'N/A'} | Consumer: ${lastBriefContext.consumer || 'N/A'} | ${lastBriefContext.context || ''}
+${brandResearchSection}
+${excludeStr}
+
+Available Audience Library:
+${audienceList}
+
+Generate ONE distinct package not already suggested.`;
+
+  try {
+    const response = await fetch('/api/claude/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        model: 'claude-sonnet-4-5',
+        max_tokens: 400,
+        system: systemPrompt,
+        messages: [{ role: 'user', content: userPrompt }]
+      })
+    });
+    const data = await response.json();
+    const text = data.content?.find(b => b.type === 'text')?.text || '';
+    return safeParseJSON(text);
+  } catch(e) { return null; }
+}
+
+// ---- Export ----
+function escapeCSV(val) {
+  if (val === null || val === undefined) return '';
+  const str = String(val).replace(/"/g, '""');
+  return /[",\n\r]/.test(str) ? `"${str}"` : str;
+}
+
+function openExport() {
+  const saved = allPackages.filter((_, i) => {
+    const btn = document.getElementById('save-btn-' + i);
+    return btn?.classList.contains('saved');
+  });
+  const toExport = saved.length > 0 ? saved : allPackages;
+  const brand = lastBriefContext.brand || 'Campaign';
+  const campaign = lastBriefContext.campaign || '';
+  const channel = lastBriefContext.channel || '';
+
+  document.getElementById('export-title').textContent = brand + (campaign ? ` — ${campaign}` : '') + (channel ? ` · ${channel}` : '');
+
+  let html = '';
+  toExport.forEach((pkg) => {
+    const combined = pkg.description + (pkg.rationale ? ' ' + pkg.rationale : '');
+    html += `
+      <div class="export-pkg">
+        <div class="export-pkg-name">${pkg.name}</div>
+        <div class="export-pkg-desc">${combined}</div>
+        <div class="export-pkg-count">Audience size: TBD</div>
+      </div>`;
+  });
+
+  if (saved.length === 0 && allPackages.length > 0) {
+    html = `<div style="font-family:'DM Mono',monospace;font-size:10px;color:var(--muted);margin-bottom:16px;letter-spacing:1px;">Showing all packages (save specific ones to export only those)</div>` + html;
+  }
+
+  document.getElementById('export-body').innerHTML = html;
+  document.getElementById('export-modal').style.display = 'flex';
+  // Store export data for CSV
+  document.getElementById('export-modal')._exportData = { toExport, brand, channel };
+}
+
+function closeExport() {
+  document.getElementById('export-modal').style.display = 'none';
+}
+
+function downloadCSV() {
+  const { toExport, brand, channel } = document.getElementById('export-modal')._exportData || {};
+  if (!toExport?.length) return;
+
+  const rows = [
+    ['Brand', 'Channel', 'Package Name', 'Description', 'Rationale', 'Segments', 'Audience Size']
+  ];
+
+  toExport.forEach(pkg => {
+    rows.push([
+      brand || '',
+      channel || '',
+      pkg.name || '',
+      pkg.description || '',
+      pkg.rationale || '',
+      (pkg.segments || []).join(' | '),
+      estReach(pkg.approx_size)
+    ]);
+  });
+
+  const csv = rows.map(r => r.map(escapeCSV).join(',')).join('\n');
+  const encoded = 'data:text/csv;charset=utf-8,' + encodeURIComponent(csv);
+  const filename = `Mosaic_${(brand || 'Export').replace(/[^a-z0-9]/gi, '_')}_${new Date().toISOString().slice(0,10)}.csv`;
+  const a = document.createElement('a');
+  a.href = encoded;
+  a.download = filename;
+  a.click();
+  showToast('CSV downloaded!');
+}
+
+// Close modal on backdrop click
+document.addEventListener('click', e => {
+  const modal = document.getElementById('export-modal');
+  if (e.target === modal) closeExport();
+});
+
+async function savePackageByIndex(idx) {
+  const pkg = allPackages[idx];
+  if (!pkg) { showToast('Could not find package to save'); return; }
+  const id = 'pkg:' + Date.now();
+  const record = {
+    id,
+    date: new Date().toISOString(),
+    brand: currentBrand,
+    campaign: currentCampaign || '',
+    channel: currentChannel || '',
+    name: pkg.name,
+    description: pkg.description,
+    rationale: pkg.rationale,
+    segments: pkg.segments
+  };
+
+  try {
+    await window.storage.set(id, JSON.stringify(record));
+    const btn = document.getElementById('save-btn-' + idx);
+    if (btn) {
+      btn.textContent = '✓ Saved';
+      btn.classList.add('saved');
+      btn.disabled = true;
+    }
+    showToast('Package saved!');
+    await loadHistory();
+    const list = document.getElementById('history-list');
+    if (!list.classList.contains('open')) toggleHistory();
+  } catch(e) {
+    showToast('Save failed — try again');
+    console.error(e);
+  }
+}
+
+async function loadHistory() {
+  try {
+    const result = await window.storage.list('pkg:');
+    const keys = result?.keys || [];
+    const items = [];
+    for (const key of keys) {
+      try {
+        const r = await window.storage.get(key);
+        if (r?.value) items.push(JSON.parse(r.value));
+      } catch(e) {}
+    }
+    items.sort((a, b) => new Date(b.date) - new Date(a.date));
+    renderHistory(items);
+  } catch(e) {
+    renderHistory([]);
+  }
+}
+
+function renderHistory(items) {
+  document.getElementById('history-count').textContent = items.length;
+  const list = document.getElementById('history-list');
+  const empty = document.getElementById('history-empty');
+  const dlBtn = document.getElementById('history-download-btn');
+  const delBtn = document.getElementById('history-deleteall-btn');
+  const sqlBtn = document.getElementById('history-sql-btn');
+  if (dlBtn) dlBtn.style.display = items.length > 0 ? '' : 'none';
+  if (delBtn) delBtn.style.display = items.length > 0 ? '' : 'none';
+  // Reset SQL button — re-evaluate based on currently selected items
+  const selectedCount = Object.keys(selectedHistoryItems).length;
+  if (sqlBtn) {
+    sqlBtn.style.display = selectedCount > 0 ? 'inline-block' : 'none';
+    sqlBtn.textContent = selectedCount > 0 ? `⌗ SQL (${selectedCount} selected)` : '⌗ SQL from Selected';
+  }
+
+  if (items.length === 0) {
+    empty.style.display = 'block';
+    Array.from(list.querySelectorAll('.history-item')).forEach(el => el.remove());
+    return;
+  }
+
+  empty.style.display = 'none';
+  // Clear old items
+  Array.from(list.querySelectorAll('.history-item')).forEach(el => el.remove());
+
+  // Store items in a module-level map for selection
+  historyItemsMap = {};
+  items.forEach(item => { historyItemsMap[item.id] = item; });
+
+  items.forEach(item => {
+    const date = new Date(item.date);
+    const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+    const segTags = item.segments.map(s => `<span class="history-tag">${s}</span>`).join('');
+
+    const div = document.createElement('div');
+    div.className = 'history-item';
+    div.dataset.id = item.id;
+
+    const isSelected = !!selectedHistoryItems[item.id];
+    if (isSelected) div.classList.add('selected');
+
+    div.innerHTML = `
+      <div style="display:flex;gap:12px;align-items:flex-start;width:100%;">
+        <input type="checkbox" class="history-checkbox" ${isSelected ? 'checked' : ''} />
+        <div style="flex:1;min-width:0;">
+          <div class="history-item-brand">${item.brand}${item.campaign ? ' — ' + item.campaign : ''}${item.channel ? ' · ' + item.channel : ''}</div>
+          <div class="history-item-name">${item.name}</div>
+          ${item.description ? `<div style="font-size:12px;color:var(--muted);line-height:1.5;margin-bottom:8px;">${item.description}${item.rationale ? ' ' + item.rationale : ''}</div>` : ''}
+          <div class="history-item-segments">${segTags}</div>
+        </div>
+        <div class="history-meta" style="flex-shrink:0;">
+          ${dateStr}
+          <button class="btn-delete" title="Delete">✕</button>
+        </div>
+      </div>
+    `;
+
+    // Wire up delete button
+    div.querySelector('.btn-delete').addEventListener('click', e => {
+      e.stopPropagation();
+      deletePackage(item.id);
+    });
+
+    // Wire up row click to toggle selection
+    div.addEventListener('click', () => {
+      const chk = div.querySelector('.history-checkbox');
+      const nowSelected = !chk.checked;
+      chk.checked = nowSelected;
+      if (nowSelected) {
+        selectedHistoryItems[item.id] = item;
+        div.classList.add('selected');
+      } else {
+        delete selectedHistoryItems[item.id];
+        div.classList.remove('selected');
+      }
+      updateSQLBtn();
+    });
+
+    list.appendChild(div);
+  });
+}
+
+// Track selected history items: { id -> item }
+const selectedHistoryItems = {};
+let historyItemsMap = {};
+
+function updateSQLBtn() {
+  const count = Object.keys(selectedHistoryItems).length;
+  const sqlBtn = document.getElementById('history-sql-btn');
+  if (sqlBtn) {
+    sqlBtn.style.display = count > 0 ? 'inline-block' : 'none';
+    sqlBtn.textContent = `⌗ SQL (${count} selected)`;
+  }
+}
+
+function generateSQLFromHistory() {
+  const packages = Object.values(selectedHistoryItems);
+  if (!packages.length) { showToast('Select at least one package first'); return; }
+
+  const brand = packages[0].brand || 'BRAND';
+
+  const setBlock = `-- ============================================================
+-- MOSAIC PACKAGE BUILD — ${brand}
+-- Hard coded table names — update when data refreshes
+-- S360 Individual:  PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331   (ADDRESS1)
+-- S360 Household:   PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317 (ADDRESS)
+-- Lifestyle:        PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_L730D_20260429 (ADDRESS)
+-- Product:          PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409         (ADDRESS)
+-- Core:             PROXIMA.PUBLIC.CORE_SEGMENTS_20260413            (ADDRESS)
+-- ============================================================`;
+
+  const packageBlocks = [];
+  const countLines = [];
+  packages.forEach(pkg => {
+    const { outputTable, sql } = buildPackageSQL(pkg, pkg.brand);
+    packageBlocks.push(sql);
+    countLines.push(`  SELECT '${pkg.name}' AS PACKAGE_NAME, COUNT(*) AS SIZE FROM ${outputTable}`);
+  });
+
+  const countBlock = `-- ============================================================
+-- FINAL: ALL PACKAGE COUNTS
+-- ============================================================
+
+${countLines.join('\nUNION ALL\n')}
+ORDER BY PACKAGE_NAME;`;
+
+  const fullSQL = [setBlock, ...packageBlocks, countBlock].join('\n\n\n');
+
+  document.getElementById('sql-title').textContent = brand + ' (from history)';
+  document.getElementById('sql-body').value = fullSQL;
+  document.getElementById('sql-counts').style.display = 'none';
+  document.getElementById('sql-modal').style.display = 'flex';
+  document.getElementById('sql-modal')._sql = fullSQL;
+  document.getElementById('sql-modal')._packages = JSON.parse(JSON.stringify(packages));
+  document.getElementById('sql-modal')._brand = brand;
+  document.getElementById('sql-modal')._campaign = packages[0].campaign || '';
+}
+
+async function deletePackage(id) {
+  try {
+    await window.storage.delete(id);
+    delete selectedHistoryItems[id];
+    updateSQLBtn();
+    showToast('Package removed');
+    await loadHistory();
+  } catch(e) {}
+}
+
+async function deleteAllPackages() {
+  if (!confirm('Delete all saved packages? This cannot be undone.')) return;
+  try {
+    const result = await window.storage.list('pkg:');
+    const keys = result?.keys || [];
+    for (const key of keys) {
+      try { await window.storage.delete(key); } catch(e) {}
+    }
+    showToast('All packages deleted');
+    await loadHistory();
+  } catch(e) {
+    showToast('Delete failed — try again');
+  }
+}
+
+
+
+function toggleHistory() {
+  const list = document.getElementById('history-list');
+  const chevron = document.getElementById('history-chevron');
+  list.classList.toggle('open');
+  chevron.classList.toggle('open');
+}
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// Load history on init
+window.addEventListener('DOMContentLoaded', loadHistory);
+
+function showError(msg) {
+  const el = document.getElementById('error');
+  el.textContent = msg;
+  el.style.display = 'block';
+}
+
+function hideError() {
+  document.getElementById('error').style.display = 'none';
+}
+
+function clearForm() {
+  document.getElementById('brand').value = '';
+  document.getElementById('consumer').value = '';
+  document.getElementById('channel').value = '';
+  document.getElementById('context').value = '';
+  document.getElementById('results').style.display = 'none';
+  hideError();
+}
+
+// ============================================================
+// SEGMENT NAME MAPPING — display name -> Snowflake SEGMENT_NAME
+// ============================================================
+
+const SEGMENT_MAP = {
+  // ---- SHOPPER360 / HH: 1:1 with display name ----
+  // (no mapping needed, used as-is)
+
+  // ---- PRODUCT segments ----
+  'Clothing Accessory Purchasers - 30 Day Recency': { table: 'product', name: 'ClothingAccessoriesL30DayShopper' },
+  'Clothing Accessory Purchasers - 60 Day Recency': { table: 'product', name: 'ClothingAccessoriesL60DayShopper' },
+  'Clothing Accessory Purchasers - 90 Day Recency': { table: 'product', name: 'ClothingAccessoriesL90DayShopper' },
+  'Clothing Purchasers - 30 Day Recency': { table: 'product', name: 'ClothingL30DayShopper' },
+  'Clothing Purchasers - 60 Day Recency': { table: 'product', name: 'ClothingL60DayShopper' },
+  'Clothing Purchasers - 90 Day Recency': { table: 'product', name: 'ClothingL90DayShopper' },
+  'Handbag, Wallet & Case Purchasers - 30 Day Recency': { table: 'product', name: 'HandbagsWalletsAndCasesL30DayShopper' },
+  'Handbag, Wallet & Case Purchasers - 60 Day Recency': { table: 'product', name: 'HandbagsWalletsAndCasesL60DayShopper' },
+  'Handbag, Wallet & Case Purchasers - 90 Day Recency': { table: 'product', name: 'HandbagsWalletsAndCasesL90DayShopper' },
+  'Jewelry Purchasers - 30 Day Recency': { table: 'product', name: 'JewelryL30DayShopper' },
+  'Jewelry Purchasers - 60 Day Recency': { table: 'product', name: 'JewelryL60DayShopper' },
+  'Jewelry Purchasers - 90 Day Recency': { table: 'product', name: 'JewelryL90DayShopper' },
+  'Shoe Purchasers - 30 Day Recency': { table: 'product', name: 'ShoesL30DayShopper' },
+  'Shoe Purchasers - 60 Day Recency': { table: 'product', name: 'ShoesL60DayShopper' },
+  'Shoe Purchasers - 90 Day Recency': { table: 'product', name: 'ShoesL90DayShopper' },
+  'Baby Gift Set Purchasers - 30 Day Recency': { table: 'product', name: 'BabyGiftSetsL30DayShopper' },
+  'Baby Gift Set Purchasers - 60 Day Recency': { table: 'product', name: 'BabyGiftSetsL60DayShopper' },
+  'Baby Gift Set Purchasers - 90 Day Recency': { table: 'product', name: 'BabyGiftSetsL90DayShopper' },
+  'Baby Transport Accessory Purchasers - 30 Day Recency': { table: 'product', name: 'BabyTransportAccessoriesL30DayShopper' },
+  'Baby Transport Accessory Purchasers - 60 Day Recency': { table: 'product', name: 'BabyTransportAccessoriesL60DayShopper' },
+  'Baby Transport Accessory Purchasers - 90 Day Recency': { table: 'product', name: 'BabyTransportAccessoriesL90DayShopper' },
+  'Diapering Purchasers - 30 Day Recency': { table: 'product', name: 'DiaperingL30DayShopper' },
+  'Diapering Purchasers - 60 Day Recency': { table: 'product', name: 'DiaperingL60DayShopper' },
+  'Diapering Purchasers - 90 Day Recency': { table: 'product', name: 'DiaperingL90DayShopper' },
+  'Nursing & Feeding Purchasers - 30 Day Recency': { table: 'product', name: 'NursingAndFeedingL30DayShopper' },
+  'Nursing & Feeding Purchasers - 60 Day Recency': { table: 'product', name: 'NursingAndFeedingL60DayShopper' },
+  'Nursing & Feeding Purchasers - 90 Day Recency': { table: 'product', name: 'NursingAndFeedingL90DayShopper' },
+  'Swaddling & Receiving Blanket Purchasers - 30 Day Recency': { table: 'product', name: 'SwaddlingAndReceivingBlanketsL30DayShopper' },
+  'Swaddling & Receiving Blanket Purchasers - 60 Day Recency': { table: 'product', name: 'SwaddlingAndReceivingBlanketsL60DayShopper' },
+  'Swaddling & Receiving Blanket Purchasers - 90 Day Recency': { table: 'product', name: 'SwaddlingAndReceivingBlanketsL90DayShopper' },
+  'Beverage Purchasers - 30 Day Recency': { table: 'product', name: 'BeveragesL30DayShopper' },
+  'Beverage Purchasers - 60 Day Recency': { table: 'product', name: 'BeveragesL60DayShopper' },
+  'Beverage Purchasers - 90 Day Recency': { table: 'product', name: 'BeveragesL90DayShopper' },
+  'Food Item Purchasers - 30 Day Recency': { table: 'product', name: 'FoodItemsL30DayShopper' },
+  'Food Item Purchasers - 60 Day Recency': { table: 'product', name: 'FoodItemsL60DayShopper' },
+  'Food Item Purchasers - 90 Day Recency': { table: 'product', name: 'FoodItemsL90DayShopper' },
+  'Tobacco Product Purchasers - 30 Day Recency': { table: 'product', name: 'TobaccoProductsL30DayShopper' },
+  'Tobacco Product Purchasers - 60 Day Recency': { table: 'product', name: 'TobaccoProductsL60DayShopper' },
+  'Tobacco Product Purchasers - 90 Day Recency': { table: 'product', name: 'TobaccoProductsL90DayShopper' },
+  'Health Care Purchasers - 30 Day Recency': { table: 'product', name: 'HealthCareL30DayShopper' },
+  'Health Care Purchasers - 60 Day Recency': { table: 'product', name: 'HealthCareL60DayShopper' },
+  'Health Care Purchasers - 90 Day Recency': { table: 'product', name: 'HealthCareL90DayShopper' },
+  'Jewelry Cleaning & Care Purchasers - 30 Day Recency': { table: 'product', name: 'JewelryCleaningAndCareL30DayShopper' },
+  'Jewelry Cleaning & Care Purchasers - 60 Day Recency': { table: 'product', name: 'JewelryCleaningAndCareL60DayShopper' },
+  'Jewelry Cleaning & Care Purchasers - 90 Day Recency': { table: 'product', name: 'JewelryCleaningAndCareL90DayShopper' },
+  'Personal Care Purchasers - 30 Day Recency': { table: 'product', name: 'PersonalCareL30DayShopper' },
+  'Personal Care Purchasers - 60 Day Recency': { table: 'product', name: 'PersonalCareL60DayShopper' },
+  'Personal Care Purchasers - 90 Day Recency': { table: 'product', name: 'PersonalCareL90DayShopper' },
+  'Decor Purchasers - 30 Day Recency': { table: 'product', name: 'DecorL30DayShopper' },
+  'Decor Purchasers - 60 Day Recency': { table: 'product', name: 'DecorL60DayShopper' },
+  'Decor Purchasers - 90 Day Recency': { table: 'product', name: 'DecorL90DayShopper' },
+  'Household Supply Purchasers - 30 Day Recency': { table: 'product', name: 'HouseholdSuppliesL30DayShopper' },
+  'Household Supply Purchasers - 60 Day Recency': { table: 'product', name: 'HouseholdSuppliesL60DayShopper' },
+  'Household Supply Purchasers - 90 Day Recency': { table: 'product', name: 'HouseholdSuppliesL90DayShopper' },
+  'Kitchen & Dining Purchasers - 30 Day Recency': { table: 'product', name: 'KitchenAndDiningL30DayShopper' },
+  'Kitchen & Dining Purchasers - 60 Day Recency': { table: 'product', name: 'KitchenAndDiningL60DayShopper' },
+  'Kitchen & Dining Purchasers - 90 Day Recency': { table: 'product', name: 'KitchenAndDiningL90DayShopper' },
+  'Lawn & Garden Purchasers - 30 Day Recency': { table: 'product', name: 'LawnAndGardenL30DayShopper' },
+  'Lawn & Garden Purchasers - 60 Day Recency': { table: 'product', name: 'LawnAndGardenL60DayShopper' },
+  'Lawn & Garden Purchasers - 90 Day Recency': { table: 'product', name: 'LawnAndGardenL90DayShopper' },
+  'Plant Purchasers - 30 Day Recency': { table: 'product', name: 'PlantsL30DayShopper' },
+  'Plant Purchasers - 60 Day Recency': { table: 'product', name: 'PlantsL60DayShopper' },
+  'Plant Purchasers - 90 Day Recency': { table: 'product', name: 'PlantsL90DayShopper' },
+
+  // ---- LIFESTYLE segments: handled by _L730D_lookback pattern in getSegmentSource ----
+  // (legacy entries removed — new table is LIFESTYLE_SEGMENTS_L730D_20260429)
+  'Insta Luxe - 30 Day Recency': { table: 'lifestyle', name: 'Insta_Luxe_L30D' },
+  'Insta Luxe - 60 Day Recency': { table: 'lifestyle', name: 'Insta_Luxe_L60D' },
+  'Insta Luxe - 90 Day Recency': { table: 'lifestyle', name: 'Insta_Luxe_L90D' },
+  'Target Chic - 30 Day Recency': { table: 'lifestyle', name: 'Target_Chic_L30D' },
+  'Target Chic - 60 Day Recency': { table: 'lifestyle', name: 'Target_Chic_L60D' },
+  'Target Chic - 90 Day Recency': { table: 'lifestyle', name: 'Target_Chic_L90D' },
+  'Premium Loungewear - 30 Day Recency': { table: 'lifestyle', name: 'Premium_Loungewear_L30D' },
+  'Premium Loungewear - 60 Day Recency': { table: 'lifestyle', name: 'Premium_Loungewear_L60D' },
+  'Premium Loungewear - 90 Day Recency': { table: 'lifestyle', name: 'Premium_Loungewear_L90D' },
+  'Workleisure & Modern Business Casual - 30 Day Recency': { table: 'lifestyle', name: 'Workleisure_&_Modern_Business_Casual_L30D' },
+  'Workleisure & Modern Business Casual - 60 Day Recency': { table: 'lifestyle', name: 'Workleisure_&_Modern_Business_Casual_L60D' },
+  'Workleisure & Modern Business Casual - 90 Day Recency': { table: 'lifestyle', name: 'Workleisure_&_Modern_Business_Casual_L90D' },
+  'Personalized & Sentimental Gifting - 30 Day Recency': { table: 'lifestyle', name: 'Personalized_&_Sentimental_Gifting_L30D' },
+  'Personalized & Sentimental Gifting - 60 Day Recency': { table: 'lifestyle', name: 'Personalized_&_Sentimental_Gifting_L60D' },
+  'Personalized & Sentimental Gifting - 90 Day Recency': { table: 'lifestyle', name: 'Personalized_&_Sentimental_Gifting_L90D' },
+  'IT GIRL - 30 Day Recency': { table: 'lifestyle', name: 'IT_GIRL_L30D' },
+  'IT GIRL - 60 Day Recency': { table: 'lifestyle', name: 'IT_GIRL_L60D' },
+  'IT GIRL - 90 Day Recency': { table: 'lifestyle', name: 'IT_GIRL_L90D' },
+  'Minimalist Luxe Essentials - 30 Day Recency': { table: 'lifestyle', name: 'Minimalist_Luxe_Essentials_L30D' },
+  'Minimalist Luxe Essentials - 60 Day Recency': { table: 'lifestyle', name: 'Minimalist_Luxe_Essentials_L60D' },
+  'Minimalist Luxe Essentials - 90 Day Recency': { table: 'lifestyle', name: 'Minimalist_Luxe_Essentials_L90D' },
+  'Clean & Non-Toxic Obsession - 30 Day Recency': { table: 'lifestyle', name: 'Clean_&_Non-Toxic_Obsession_L30D' },
+  'Clean & Non-Toxic Obsession - 60 Day Recency': { table: 'lifestyle', name: 'Clean_&_Non-Toxic_Obsession_L60D' },
+  'Clean & Non-Toxic Obsession - 90 Day Recency': { table: 'lifestyle', name: 'Clean_&_Non-Toxic_Obsession_L90D' },
+  'Golf - 30 Day Recency': { table: 'lifestyle', name: 'Golf_L30D' },
+  'Golf - 60 Day Recency': { table: 'lifestyle', name: 'Golf_L60D' },
+  'Golf - 90 Day Recency': { table: 'lifestyle', name: 'Golf_L90D' },
+  'New Parents & Postpartum - 30 Day Recency': { table: 'lifestyle', name: 'New_Parents_&_Postpartum_L30D' },
+  'New Parents & Postpartum - 60 Day Recency': { table: 'lifestyle', name: 'New_Parents_&_Postpartum_L60D' },
+  'New Parents & Postpartum - 90 Day Recency': { table: 'lifestyle', name: 'New_Parents_&_Postpartum_L90D' },
+  'Parents of School-Age Children - 30 Day Recency': { table: 'lifestyle', name: 'Parents_of_School-Age_Children_L30D' },
+  'Parents of School-Age Children - 60 Day Recency': { table: 'lifestyle', name: 'Parents_of_School-Age_Children_L60D' },
+  'Parents of School-Age Children - 90 Day Recency': { table: 'lifestyle', name: 'Parents_of_School-Age_Children_L90D' },
+  'Parents of Toddlers & Young Children - 30 Day Recency': { table: 'lifestyle', name: 'Parents_of_Toddlers_&_Young_Children_L30D' },
+  'Parents of Toddlers & Young Children - 60 Day Recency': { table: 'lifestyle', name: 'Parents_of_Toddlers_&_Young_Children_L60D' },
+  'Parents of Toddlers & Young Children - 90 Day Recency': { table: 'lifestyle', name: 'Parents_of_Toddlers_&_Young_Children_L90D' },
+  'Working Mothers - 30 Day Recency': { table: 'lifestyle', name: 'Working_Mothers_L30D' },
+  'Working Mothers - 60 Day Recency': { table: 'lifestyle', name: 'Working_Mothers_L60D' },
+  'Working Mothers - 90 Day Recency': { table: 'lifestyle', name: 'Working_Mothers_L90D' },
+  'At-Home Anti-Aging Treatments - 30 Day Recency': { table: 'lifestyle', name: 'At-Home_Anti-Aging_Treatments_L30D' },
+  'At-Home Anti-Aging Treatments - 60 Day Recency': { table: 'lifestyle', name: 'At-Home_Anti-Aging_Treatments_L60D' },
+  'At-Home Anti-Aging Treatments - 90 Day Recency': { table: 'lifestyle', name: 'At-Home_Anti-Aging_Treatments_L90D' },
+  'Athletic Performance & Recovery - 30 Day Recency': { table: 'lifestyle', name: 'Athletic_Performance_&_Recovery_L30D' },
+  'Athletic Performance & Recovery - 60 Day Recency': { table: 'lifestyle', name: 'Athletic_Performance_&_Recovery_L60D' },
+  'Athletic Performance & Recovery - 90 Day Recency': { table: 'lifestyle', name: 'Athletic_Performance_&_Recovery_L90D' },
+  'DIY Beauty & At-Home Salon - 30 Day Recency': { table: 'lifestyle', name: 'DIY_Beauty_&_At-Home_Salon_L30D' },
+  'DIY Beauty & At-Home Salon - 60 Day Recency': { table: 'lifestyle', name: 'DIY_Beauty_&_At-Home_Salon_L60D' },
+  'DIY Beauty & At-Home Salon - 90 Day Recency': { table: 'lifestyle', name: 'DIY_Beauty_&_At-Home_Salon_L90D' },
+  'Dog Owners - 30 Day Recency': { table: 'lifestyle', name: 'Dog_Owners_L30D' },
+  'Dog Owners - 60 Day Recency': { table: 'lifestyle', name: 'Dog_Owners_L60D' },
+  'Dog Owners - 90 Day Recency': { table: 'lifestyle', name: 'Dog_Owners_L90D' },
+  'Pop Culture & Fandom - 30 Day Recency': { table: 'lifestyle', name: 'Pop_Culture_&_Fandom_L30D' },
+  'Pop Culture & Fandom - 60 Day Recency': { table: 'lifestyle', name: 'Pop_Culture_&_Fandom_L60D' },
+  'Pop Culture & Fandom - 90 Day Recency': { table: 'lifestyle', name: 'Pop_Culture_&_Fandom_L90D' },
+  "Women's Midlife Wellness Support Interest - 30 Day Recency": { table: 'lifestyle', name: "Women's_Midlife_Wellness_Support_Interest_L30D" },
+  "Women's Midlife Wellness Support Interest - 60 Day Recency": { table: 'lifestyle', name: "Women's_Midlife_Wellness_Support_Interest_L60D" },
+  "Women's Midlife Wellness Support Interest - 90 Day Recency": { table: 'lifestyle', name: "Women's_Midlife_Wellness_Support_Interest_L90D" },
+  'Sleep Optimization Interest - 30 Day Recency': { table: 'lifestyle', name: 'Sleep_Optimization_Interest_L30D' },
+  'Sleep Optimization Interest - 60 Day Recency': { table: 'lifestyle', name: 'Sleep_Optimization_Interest_L60D' },
+  'Sleep Optimization Interest - 90 Day Recency': { table: 'lifestyle', name: 'Sleep_Optimization_Interest_L90D' },
+  'Stress & Anxiety Relief Interest - 30 Day Recency': { table: 'lifestyle', name: 'Stress_&_Anxiety_Relief_Interest_L30D' },
+  'Stress & Anxiety Relief Interest - 60 Day Recency': { table: 'lifestyle', name: 'Stress_&_Anxiety_Relief_Interest_L60D' },
+  'Stress & Anxiety Relief Interest - 90 Day Recency': { table: 'lifestyle', name: 'Stress_&_Anxiety_Relief_Interest_L90D' },
+  'Weight Management Interest - 30 Day Recency': { table: 'lifestyle', name: 'Weight_Management_Interest_L30D' },
+  'Weight Management Interest - 60 Day Recency': { table: 'lifestyle', name: 'Weight_Management_Interest_L60D' },
+  'Weight Management Interest - 90 Day Recency': { table: 'lifestyle', name: 'Weight_Management_Interest_L90D' },
+  'Supports Female-Founded Brands - 30 Day Recency': { table: 'lifestyle', name: 'Supports_Female-Founded_Brands_L30D' },
+  'Supports Female-Founded Brands - 60 Day Recency': { table: 'lifestyle', name: 'Supports_Female-Founded_Brands_L60D' },
+  'Supports Female-Founded Brands - 90 Day Recency': { table: 'lifestyle', name: 'Supports_Female-Founded_Brands_L90D' },
+  'Cruelty-Free & Vegan - 30 Day Recency': { table: 'lifestyle', name: 'Cruelty-Free_&_Vegan_L30D' },
+  'Cruelty-Free & Vegan - 60 Day Recency': { table: 'lifestyle', name: 'Cruelty-Free_&_Vegan_L60D' },
+  'Cruelty-Free & Vegan - 90 Day Recency': { table: 'lifestyle', name: 'Cruelty-Free_&_Vegan_L90D' },
+  'Sustainable Fashion & Beauty - 30 Day Recency': { table: 'lifestyle', name: 'Sustainable_Fashion_&_Beauty_L30D' },
+  'Sustainable Fashion & Beauty - 60 Day Recency': { table: 'lifestyle', name: 'Sustainable_Fashion_&_Beauty_L60D' },
+  'Sustainable Fashion & Beauty - 90 Day Recency': { table: 'lifestyle', name: 'Sustainable_Fashion_&_Beauty_L90D' },
+
+  // ---- CORE segments ----
+  'Animal & Pet Supplies': { table: 'core', name: 'AnimalPetSupplies' },
+  'Apparel & Accessories': { table: 'core', name: 'ApparelAccessories' },
+  'Arts & Entertainment': { table: 'core', name: 'ArtsEntertainment' },
+  'Automobile': { table: 'core', name: 'Automobile' },
+  'Beauty': { table: 'core', name: 'Beauty' },
+  'Electronics': { table: 'core', name: 'Electronics' },
+  'Food & Beverages': { table: 'core', name: 'FoodBeverages' },
+  'Health': { table: 'core', name: 'Health' },
+  'Home & Garden': { table: 'core', name: 'HomeGarden' },
+  'Sporting Goods': { table: 'core', name: 'SportingGoods' },
+  'Travel': { table: 'core', name: 'Travel' },
+  'Young Family Essentials': { table: 'core', name: 'YoungFamilyEssentials' },
+  'DTC Recent Shopper Segment': { table: 'core', name: 'DTCRecentOnline' },
+  'DTC Shopper Segment': { table: 'core', name: 'DTCOnline' },
+  'DTC High LTV': { table: 'core', name: 'DTCHighLTV' },
+  'DTC High AOV': { table: 'core', name: 'DTCHighAOV' },
+  'Frequent Shopper': { table: 'core', name: 'DTCFrequent' },
+  'MultiBrand Shopper': { table: 'core', name: 'DTCMultiBrand' },
+  'Subscription Shopper': { table: 'core', name: 'DTCSubscription' },
+  'Discount': { table: 'core', name: 'DTCDiscount' },
+  'Non-Discount': { table: 'core', name: 'DTCNonDiscount' },
+};
+
+function getSegmentSource(displayName) {
+  // Strip any tags Claude may have appended: [S360], [Core], [P&L], ?
+  const clean = displayName.replace(/\s*\[.*?\]\s*\??/g, '').trim();
+  // New lifestyle table: segment names used as-is
+  if (clean.endsWith('_L730D_lookback')) return { table: 'lifestyle', name: clean };
+  if (SEGMENT_MAP[clean]) return SEGMENT_MAP[clean];
+  // Default: Shopper360 (plain text match)
+  return { table: 's360', name: clean };
+}
+
+function sanitizeTableName(str) {
+  return str.replace(/[^a-zA-Z0-9]/g, '').toUpperCase();
+}
+
+function buildPackageSQL(pkg, brand) {
+  const brandClean = sanitizeTableName(brand || 'BRAND');
+  const pkgClean = sanitizeTableName(pkg.name);
+  const today = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const outputTable = `PROXIMA.PUBLIC.SPEC_${brandClean}_${pkgClean}_${today}`;
+
+  // Classify segments by source table
+  const s360segs = [], productSegs = [], lifestyleSegs = [], coreSegs = [];
+  (pkg.segments || []).forEach(seg => {
+    const mapped = getSegmentSource(seg);
+    if (mapped.table === 'product') productSegs.push(mapped.name);
+    else if (mapped.table === 'lifestyle') lifestyleSegs.push(mapped.name);
+    else if (mapped.table === 'core') coreSegs.push(mapped.name);
+    else s360segs.push(mapped.name); // s360 + s360_hh
+  });
+
+  const fmtList = (arr) => arr.map(s => `    '${s}'`).join(',\n');
+
+  let ctes = [];
+  let unions = [];
+
+  if (s360segs.length) {
+    ctes.push(`  s360 AS (
+    SELECT ADDRESS1 AS ADDRESS, CITY, STATE, ZIP
+    FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331
+    WHERE SEGMENT_NAME IN (
+${fmtList(s360segs)}
+    )
+    AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL
+  ),
+
+  s360_hh AS (
+    SELECT ADDRESS, CITY, STATE, ZIP
+    FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317
+    WHERE SEGMENT_NAME IN (
+${fmtList(s360segs)}
+    )
+    AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+  )`);
+    unions.push('  SELECT ADDRESS, CITY, STATE, ZIP FROM s360');
+    unions.push('  SELECT ADDRESS, CITY, STATE, ZIP FROM s360_hh');
+  }
+
+  if (productSegs.length) {
+    ctes.push(`  product AS (
+    SELECT ADDRESS, CITY, STATE, ZIP
+    FROM PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409
+    WHERE SEGMENT_NAME IN (
+${fmtList(productSegs)}
+    )
+    AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+  )`);
+    unions.push('  SELECT ADDRESS, CITY, STATE, ZIP FROM product');
+  }
+
+  if (lifestyleSegs.length) {
+    ctes.push(`  lifestyle AS (
+    SELECT ADDRESS, CITY, STATE, ZIP
+    FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_L730D_20260429
+    WHERE SEGMENT_NAME IN (
+${fmtList(lifestyleSegs)}
+    )
+    AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+  )`);
+    unions.push('  SELECT ADDRESS, CITY, STATE, ZIP FROM lifestyle');
+  }
+
+  if (coreSegs.length) {
+    ctes.push(`  core AS (
+    SELECT ADDRESS, CITY, STATE, ZIP
+    FROM PROXIMA.PUBLIC.CORE_SEGMENTS_20260413
+    WHERE SEGMENT_NAME IN (
+${fmtList(coreSegs)}
+    )
+    AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+  )`);
+    unions.push('  SELECT ADDRESS, CITY, STATE, ZIP FROM core');
+  }
+
+  return {
+    outputTable,
+    sql: `-- Package: ${pkg.name}
+CREATE OR REPLACE TABLE ${outputTable} AS
+WITH
+${ctes.join(',\n\n')},
+
+  combined AS (
+${unions.join('\n  UNION ALL\n')}
+  ),
+
+  deduped AS (
+    SELECT ADDRESS, CITY, STATE, ZIP,
+      ROW_NUMBER() OVER (PARTITION BY ADDRESS, ZIP ORDER BY ADDRESS) AS rn
+    FROM combined
+  )
+
+SELECT ADDRESS, CITY, STATE, ZIP FROM deduped WHERE rn = 1;`
+  };
+}
+
+function openSQL() {
+  const saved = allPackages.filter((_, i) => {
+    const btn = document.getElementById('save-btn-' + i);
+    return btn?.classList.contains('saved');
+  });
+  const toExport = saved.length > 0 ? saved : allPackages;
+  const brand = lastBriefContext.brand || 'BRAND';
+
+  const setBlock = `-- ============================================================
+-- MOSAIC PACKAGE BUILD — ${brand}
+-- Hard coded table names — update when data refreshes
+-- S360 Individual:  PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331   (ADDRESS1)
+-- S360 Household:   PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317 (ADDRESS)
+-- Lifestyle:        PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_L730D_20260429 (ADDRESS)
+-- Product:          PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409         (ADDRESS)
+-- Core:             PROXIMA.PUBLIC.CORE_SEGMENTS_20260413            (ADDRESS)
+-- ============================================================`;
+
+  const packageBlocks = [];
+  const countLines = [];
+  toExport.forEach(pkg => {
+    const { outputTable, sql } = buildPackageSQL(pkg, brand);
+    packageBlocks.push(sql);
+    countLines.push(`  SELECT '${pkg.name}' AS PACKAGE_NAME, COUNT(*) AS SIZE FROM ${outputTable}`);
+  });
+
+  const countBlock = `-- ============================================================
+-- FINAL: ALL PACKAGE COUNTS
+-- ============================================================
+
+${countLines.join('\nUNION ALL\n')}
+ORDER BY PACKAGE_NAME;`;
+
+  const fullSQL = [setBlock, ...packageBlocks, countBlock].join('\n\n\n');
+
+  document.getElementById('sql-title').textContent = brand;
+  document.getElementById('sql-body').value = fullSQL;
+  document.getElementById('sql-counts').style.display = 'none';
+  document.getElementById('sql-modal').style.display = 'flex';
+  document.getElementById('sql-modal')._sql = fullSQL;
+  document.getElementById('sql-modal')._packages = JSON.parse(JSON.stringify(toExport));
+  document.getElementById('sql-modal')._brand = brand;
+}
+
+function closeSQL() {
+  document.getElementById('sql-modal').style.display = 'none';
+}
+
+function copySQL() {
+  const sql = document.getElementById('sql-body').value || '';
+  safeCopyToClipboard(sql, 'SQL copied!');
+}
+
+async function saveSQLToBuild() {
+  const sql = document.getElementById('sql-body').value || '';
+  if (!sql) return;
+  const brand = (lastBriefContext.brand || document.getElementById('sql-modal')._brand || 'Build').replace(/[^a-zA-Z0-9]/g, '');
+  const campaign = (lastBriefContext.campaign || document.getElementById('sql-modal')._campaign || '').replace(/[^a-zA-Z0-9]/g, '');
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  const filename = [brand, campaign, date].filter(Boolean).join('_');
+  try {
+    const r = await fetch('/api/sql/save', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sql, filename })
+    });
+    const data = await r.json();
+    if (data.ok) showToast(`Saved as ${data.filename}`);
+    else showToast('Save failed');
+  } catch(e) {
+    showToast('Save failed');
+    console.error(e);
+  }
+}
+
+const MIN_PKG_SIZE = 6000000;
+const MAX_EXPAND_ITERATIONS = 3;
+
+function buildCountSQL(packages) {
+  const subqueries = packages.map(pkg => {
+    const s360segs = [], productSegs = [], lifestyleSegs = [], coreSegs = [];
+    (pkg.segments || []).forEach(seg => {
+      const mapped = getSegmentSource(seg);
+      if (mapped.table === 'product') productSegs.push(mapped.name);
+      else if (mapped.table === 'lifestyle') lifestyleSegs.push(mapped.name);
+      else if (mapped.table === 'core') coreSegs.push(mapped.name);
+      else s360segs.push(mapped.name);
+    });
+    const fmt = arr => arr.map(s => `'${s}'`).join(', ');
+    const unions = [];
+    if (s360segs.length) {
+      unions.push(`SELECT ADDRESS1 AS ADDRESS, ZIP FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331 WHERE SEGMENT_NAME IN (${fmt(s360segs)}) AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL`);
+      unions.push(`SELECT ADDRESS, ZIP FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317 WHERE SEGMENT_NAME IN (${fmt(s360segs)}) AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL`);
+    }
+    if (productSegs.length) unions.push(`SELECT ADDRESS, ZIP FROM PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409 WHERE SEGMENT_NAME IN (${fmt(productSegs)}) AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL`);
+    if (lifestyleSegs.length) unions.push(`SELECT ADDRESS, ZIP FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_L730D_20260429 WHERE SEGMENT_NAME IN (${fmt(lifestyleSegs)}) AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL`);
+    if (coreSegs.length) unions.push(`SELECT ADDRESS, ZIP FROM PROXIMA.PUBLIC.CORE_SEGMENTS_20260413 WHERE SEGMENT_NAME IN (${fmt(coreSegs)}) AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL`);
+    if (!unions.length) return null;
+    const safe = pkg.name.replace(/'/g, "''");
+    return `SELECT '${safe}' AS PACKAGE_NAME, APPROX_COUNT_DISTINCT(ADDRESS || ':' || ZIP) AS SIZE FROM (\n  ${unions.join('\n  UNION\n  ')}\n) s`;
+  }).filter(Boolean);
+  return subqueries.join('\nUNION ALL\n') + '\nORDER BY PACKAGE_NAME;';
+}
+
+function buildFullSQL(packages, brand) {
+  const setBlock = `-- ============================================================
+-- MOSAIC PACKAGE BUILD — ${brand}
+-- Hard coded table names — update when data refreshes
+-- S360 Individual:  PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331   (ADDRESS1)
+-- S360 Household:   PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317 (ADDRESS)
+-- Lifestyle:        PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_L730D_20260429 (ADDRESS)
+-- Product:          PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409         (ADDRESS)
+-- Core:             PROXIMA.PUBLIC.CORE_SEGMENTS_20260413            (ADDRESS)
+-- ============================================================`;
+  const packageBlocks = [], countLines = [];
+  packages.forEach(pkg => {
+    const { outputTable, sql } = buildPackageSQL(pkg, brand);
+    packageBlocks.push(sql);
+    countLines.push(`  SELECT '${pkg.name}' AS PACKAGE_NAME, COUNT(*) AS SIZE FROM ${outputTable}`);
+  });
+  const countBlock = `-- ============================================================\n-- FINAL: ALL PACKAGE COUNTS\n-- ============================================================\n\n${countLines.join('\nUNION ALL\n')}\nORDER BY PACKAGE_NAME;`;
+  return [setBlock, ...packageBlocks, countBlock].join('\n\n\n');
+}
+
+function safeParseJSONArray(text) {
+  if (!text) return null;
+  let clean = text.replace(/```json|```/g, '').trim();
+  const start = clean.indexOf('['), end = clean.lastIndexOf(']');
+  if (start === -1 || end === -1) return null;
+  try { return JSON.parse(clean.slice(start, end + 1)); } catch(e) { return null; }
+}
+
+function renderPackageCounts(counts, phase, iteration, warned) {
+  const warnedSet = new Set(warned || []);
+  const container = document.getElementById('sql-counts');
+  const rows = counts.map(c => {
+    const size = Number(c.size);
+    let badge, color;
+    if (warnedSet.has(c.package)) {
+      badge = '⚠ Could not expand'; color = 'var(--accent2)';
+    } else if (phase === 'expanding' && size < MIN_PKG_SIZE) {
+      badge = '⏳ Expanding...'; color = 'var(--muted)';
+    } else if (size >= MIN_PKG_SIZE) {
+      badge = '✓ In range'; color = 'var(--accent3)';
+    } else {
+      badge = '✗ Too small'; color = 'var(--accent2)';
+    }
+    const approxMark = (phase === 'checking' || phase === 'expanding') ? ' ~' : '';
+    return `<div style="display:flex;justify-content:space-between;align-items:center;padding:7px 0;border-bottom:1px solid var(--border);">
+      <span style="font-family:'DM Mono',monospace;font-size:11px;color:var(--text);flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">${c.package}</span>
+      <span style="display:flex;gap:16px;align-items:center;flex-shrink:0;margin-left:12px;">
+        <span style="font-family:'DM Mono',monospace;font-size:12px;color:var(--accent3);">${size.toLocaleString()}${approxMark}</span>
+        <span style="font-size:11px;min-width:110px;text-align:right;color:${color};">${badge}</span>
+      </span>
+    </div>`;
+  }).join('');
+  const phaseLabel = { checking: 'APPROX SIZE CHECK', expanding: `EXPANDING — PASS ${iteration} / ${MAX_EXPAND_ITERATIONS}`, done: 'FINAL COUNTS' }[phase] || '';
+  let warningHtml = '';
+  if (warnedSet.size > 0) {
+    warningHtml = `<div style="margin-top:12px;padding:10px 12px;background:rgba(232,103,122,0.1);border:1px solid rgba(232,103,122,0.3);border-radius:6px;font-size:12px;color:var(--accent2);">⚠ ${[...warnedSet].join(', ')} could not reach 6M after ${MAX_EXPAND_ITERATIONS} passes. Consider adding more audiences to these packages.</div>`;
+  }
+  container.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">${phaseLabel}</div>${rows}${warningHtml}`;
+  container.style.display = 'block';
+}
+
+async function expandPackagesWithClaude(failingPkgs, brand) {
+  const audienceList = AUDIENCES.map(a => `- ${a.name} [${sheetShort(a.sheet)}]`).join('\n');
+  return Promise.all(failingPkgs.map(async ({ pkg, size }) => {
+    const systemPrompt = `You are an expert audience strategist at Proxima. An audience package needs to reach 6 million unique addresses. Add more related segments from the available library. Return ONLY a JSON array of additional segment display names exactly as listed. Do not repeat existing segments. Add 4-8 semantically related segments.`;
+    const userPrompt = `Package: "${pkg.name}"\nDescription: ${pkg.description || ''}\nCurrent segments: ${(pkg.segments || []).join(', ')}\nCurrent approx size: ${Number(size).toLocaleString()} (target: 6M+)\nBrand: ${brand}\n\nAvailable segments:\n${audienceList}\n\nReturn a JSON array of NEW segment names to add.`;
+    try {
+      const resp = await fetch('/api/claude/messages', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ model: 'claude-sonnet-4-6', max_tokens: 500, system: systemPrompt, messages: [{ role: 'user', content: userPrompt }] }) });
+      const data = await resp.json();
+      const text = data.content?.find(b => b.type === 'text')?.text || '';
+      const newSegs = safeParseJSONArray(text);
+      if (Array.isArray(newSegs) && newSegs.length) {
+        const existing = new Set(pkg.segments || []);
+        return { ...pkg, segments: [...(pkg.segments || []), ...newSegs.filter(s => !existing.has(s))] };
+      }
+    } catch(e) { console.error('Expand error:', e); }
+    return pkg;
+  }));
+}
+
+function estReach(approxSize) {
+  if (!approxSize) return 'TBD';
+  const millions = Number(approxSize) / 4 / 1000000;
+  return (Math.round(millions * 10) / 10).toFixed(1) + 'M';
+}
+
+async function runOnSnowflake() {
+  const modal = document.getElementById('sql-modal');
+  let packages = modal._packages ? JSON.parse(JSON.stringify(modal._packages)) : null;
+  const brand = modal._brand || '';
+  const btn = document.getElementById('snowflake-run-btn');
+
+  if (!packages) {
+    const sql = document.getElementById('sql-body').value || '';
+    if (!sql) return;
+    btn.textContent = '⏳ Running...';
+    btn.disabled = true;
+    document.getElementById('sql-counts').style.display = 'none';
+    try {
+      const r = await fetch('/api/snowflake/execute', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ sql }) });
+      const data = await r.json();
+      if (r.ok && data.ok) showToast('Executed successfully on Snowflake.');
+      else showToast(data.detail || 'Snowflake error — check server logs');
+    } catch(e) { showToast('Snowflake error — check server logs'); console.error(e); }
+    finally { btn.textContent = '▶ Run on Snowflake'; btn.disabled = false; }
+    return;
+  }
+
+  btn.disabled = true;
+  document.getElementById('sql-counts').style.display = 'none';
+
+  try {
+    // Phase 1: approx count + expansion loop
+    let iteration = 0;
+    let lastCounts = [];
+    let warned = [];
+
+    while (true) {
+      btn.textContent = iteration === 0 ? '⏳ Checking sizes...' : `⏳ Expanding (${iteration}/${MAX_EXPAND_ITERATIONS})...`;
+      const r = await fetch('/api/snowflake/execute', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sql: buildCountSQL(packages) })
+      });
+      const data = await r.json();
+      if (!r.ok || !data.ok) { showToast(data.detail || 'Snowflake error — check server logs'); return; }
+      lastCounts = data.counts || [];
+
+      const failing = lastCounts.filter(c => Number(c.size) < MIN_PKG_SIZE);
+      if (failing.length === 0 || iteration >= MAX_EXPAND_ITERATIONS) {
+        if (failing.length > 0) warned = failing.map(c => c.package);
+        break;
+      }
+
+      renderPackageCounts(lastCounts, 'expanding', iteration + 1, []);
+      showToast(`${failing.length} package(s) below 6M — adding segments (pass ${iteration + 1})...`);
+      const expanded = await expandPackagesWithClaude(
+        failing.map(c => ({ pkg: packages.find(p => p.name === c.package), size: c.size })).filter(x => x.pkg),
+        brand
+      );
+      expanded.forEach(ep => { const i = packages.findIndex(p => p.name === ep.name); if (i >= 0) packages[i] = ep; });
+      iteration++;
+    }
+
+    renderPackageCounts(lastCounts, 'checking', iteration, warned);
+    if (warned.length) showToast(`⚠ ${warned.length} package(s) couldn't reach 6M — see below`);
+
+    // Phase 2: create tables for passing packages only
+    const passing = packages.filter(p => !warned.includes(p.name));
+    if (!passing.length) { showToast('No packages passed size check — no tables created.'); return; }
+
+    btn.textContent = '⏳ Creating tables...';
+    const fullSQL = buildFullSQL(passing, brand);
+    document.getElementById('sql-body').value = fullSQL;
+
+    const r2 = await fetch('/api/snowflake/execute', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ sql: fullSQL })
+    });
+    const data2 = await r2.json();
+    if (!r2.ok || !data2.ok) { showToast(data2.detail || 'Snowflake error — check server logs'); return; }
+
+    if (data2.counts?.length) {
+      renderPackageCounts(data2.counts, 'done', 0, warned);
+      showToast('Tables created! Final counts below.');
+    } else {
+      showToast('Tables created successfully.');
+    }
+
+    // Phase 3: save approx sizes back to storage
+    const approxMap = {};
+    lastCounts.forEach(c => { if (!warned.includes(c.package)) approxMap[c.package] = c.size; });
+    if (Object.keys(approxMap).length) {
+      try {
+        const stored = await window.storage.list('pkg:');
+        for (const key of (stored?.keys || [])) {
+          const r = await window.storage.get(key);
+          if (!r?.value) continue;
+          const item = JSON.parse(r.value);
+          const size = approxMap[item.name];
+          if (size !== undefined && item.brand === brand) {
+            item.approx_size = size;
+            await window.storage.set(key, JSON.stringify(item));
+          }
+        }
+      } catch(e) { console.error('Failed to save approx sizes:', e); }
+    }
+
+  } catch(e) {
+    showToast('Snowflake error — check server logs');
+    console.error(e);
+  } finally {
+    btn.textContent = '▶ Run on Snowflake';
+    btn.disabled = false;
+  }
+}
+document.addEventListener('click', e => {
+  const modal = document.getElementById('sql-modal');
+  if (e.target === modal) closeSQL();
+});
+
+// ── Backend storage polyfill (replaces Claude.ai artifact window.storage) ──
+window.storage = {
+  async get(key) {
+    const r = await fetch(`/api/storage/${encodeURIComponent(key)}`);
+    if (!r.ok) return null;
+    return r.json();
+  },
+  async set(key, value) {
+    await fetch(`/api/storage/${encodeURIComponent(key)}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ value }),
+    });
+  },
+  async list(prefix) {
+    const r = await fetch(`/api/storage?prefix=${encodeURIComponent(prefix)}`);
+    return r.json();
+  },
+  async delete(key) {
+    await fetch(`/api/storage/${encodeURIComponent(key)}`, { method: 'DELETE' });
+  },
+};
+
+async function downloadHistory() {
+  try {
+    const result = await window.storage.list('pkg:');
+    const keys = result?.keys || [];
+    const items = [];
+    for (const key of keys) {
+      try {
+        const r = await window.storage.get(key);
+        if (r?.value) items.push(JSON.parse(r.value));
+      } catch(e) {}
+    }
+    items.sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (!items.length) { showToast('No saved packages yet'); return; }
+
+    const rows = [['Date', 'Brand', 'Campaign', 'Channel', 'Package Name', 'Description', 'Rationale', 'Segments', 'Est. Reach']];
+    items.forEach(item => {
+      rows.push([
+        new Date(item.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+        item.brand || '',
+        item.campaign || '',
+        item.channel || '',
+        item.name || '',
+        item.description || '',
+        item.rationale || '',
+        (item.segments || []).join(' | '),
+        estReach(item.approx_size)
+      ]);
+    });
+
+    // Tab-separated so paste into Google Sheets works directly
+    const tsv = rows.map(r => r.map(v => String(v || '').replace(/\t/g, ' ')).join('\t')).join('\n');
+    showCopyFallbackModal(tsv);
+  } catch(e) {
+    showToast('Failed to load history');
+    console.error(e);
+  }
+}
+</script>
+</body>
+</html>

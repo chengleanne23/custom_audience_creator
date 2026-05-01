@@ -1,0 +1,11 @@
+.env
+.env.*
+__pycache__/
+**/__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+notebooks/
+historical/
+files/saved_packages.csv
+start.sh

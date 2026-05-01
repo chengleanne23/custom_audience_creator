@@ -1,0 +1,12 @@
+.env
+*.csv
+historical/
+.claude/
+__pycache__/
+*.pyc
+*.pyo
+.DS_Store
+*.egg-info/
+.venv/
+venv/
+node_modules/

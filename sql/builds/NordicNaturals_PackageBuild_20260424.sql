@@ -1,0 +1,359 @@
+-- ============================================================
+-- MOSAIC PACKAGE BUILD — Nordic Naturals
+-- 6 Packages | Generated 2026-04-24
+-- S360 Individual:  PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331   (ADDRESS1)
+-- S360 Household:   PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317 (ADDRESS)
+-- Lifestyle:        PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_20260409     (ADDRESS)
+-- Product:          PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409       (ADDRESS)
+-- Core:             PROXIMA.PUBLIC.CORE_SEGMENTS_20260413          (ADDRESS)
+-- ============================================================
+
+
+-- ============================================================
+-- PACKAGE 1: Premium Pet Wellness Buyers
+-- ============================================================
+
+CREATE OR REPLACE TABLE PROXIMA.PUBLIC.SPEC_NORDICNATURALS_PREMIUMPETWELLNESSBUYERS AS
+WITH combined AS (
+
+  SELECT ADDRESS1 AS ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331
+  WHERE SEGMENT_NAME IN (
+    'Pets Avid Shopper',
+    'High Lifetime Value Pets Shopper',
+    'Subscription Purchase Pets Shopper',
+    'Pets Shopper - 90 Day Recency'
+  )
+  AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317
+  WHERE SEGMENT_NAME IN (
+    'Pets Avid Shopper',
+    'High Lifetime Value Pets Shopper',
+    'Subscription Purchase Pets Shopper',
+    'Pets Shopper - 90 Day Recency'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'Dog_Owners_L90D'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.CORE_SEGMENTS_20260413
+  WHERE SEGMENT_NAME IN (
+    'AnimalPetSupplies'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+),
+deduped AS (
+  SELECT ADDRESS, CITY, STATE, ZIP,
+    ROW_NUMBER() OVER (PARTITION BY ADDRESS, ZIP ORDER BY ADDRESS) AS rn
+  FROM combined
+)
+SELECT ADDRESS, CITY, STATE, ZIP FROM deduped WHERE rn = 1;
+
+
+-- ============================================================
+-- PACKAGE 2: Back to School Mom Essentials
+-- ============================================================
+
+CREATE OR REPLACE TABLE PROXIMA.PUBLIC.SPEC_NORDICNATURALS_BTSMOESSENTIALS AS
+WITH combined AS (
+
+  SELECT ADDRESS1 AS ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331
+  WHERE SEGMENT_NAME IN (
+    'Female Children Shopper',
+    'Female Health Shopper',
+    'Children Active Shopper'
+  )
+  AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317
+  WHERE SEGMENT_NAME IN (
+    'Female Children Shopper',
+    'Female Health Shopper',
+    'Children Active Shopper'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'Parents_of_School-Age_Children_L90D',
+    'Working_Mothers_L90D'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'HealthCareL90DayShopper'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+),
+deduped AS (
+  SELECT ADDRESS, CITY, STATE, ZIP,
+    ROW_NUMBER() OVER (PARTITION BY ADDRESS, ZIP ORDER BY ADDRESS) AS rn
+  FROM combined
+)
+SELECT ADDRESS, CITY, STATE, ZIP FROM deduped WHERE rn = 1;
+
+
+-- ============================================================
+-- PACKAGE 3: Premium Pet Parent Health Advocates
+-- ============================================================
+
+CREATE OR REPLACE TABLE PROXIMA.PUBLIC.SPEC_NORDICNATURALS_PREMIUMPETPARENTHEALTHADVOCATES AS
+WITH combined AS (
+
+  SELECT ADDRESS1 AS ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331
+  WHERE SEGMENT_NAME IN (
+    'Pets Active Shopper',
+    'Pets Avid Shopper',
+    'High Average Order Value Pets Shopper',
+    'High Lifetime Value Pets Shopper',
+    'Pets Shopper - 90 Day Recency',
+    'Female Pets Shopper',
+    'Health Active Shopper'
+  )
+  AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317
+  WHERE SEGMENT_NAME IN (
+    'Pets Active Shopper',
+    'Pets Avid Shopper',
+    'High Average Order Value Pets Shopper',
+    'High Lifetime Value Pets Shopper',
+    'Pets Shopper - 90 Day Recency',
+    'Female Pets Shopper',
+    'Health Active Shopper'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'Dog_Owners_L90D',
+    'Clean_&_Non-Toxic_Obsession_L90D'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.CORE_SEGMENTS_20260413
+  WHERE SEGMENT_NAME IN (
+    'AnimalPetSupplies'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+),
+deduped AS (
+  SELECT ADDRESS, CITY, STATE, ZIP,
+    ROW_NUMBER() OVER (PARTITION BY ADDRESS, ZIP ORDER BY ADDRESS) AS rn
+  FROM combined
+)
+SELECT ADDRESS, CITY, STATE, ZIP FROM deduped WHERE rn = 1;
+
+
+-- ============================================================
+-- PACKAGE 4: Pet Wellness Owners
+-- ============================================================
+
+CREATE OR REPLACE TABLE PROXIMA.PUBLIC.SPEC_NORDICNATURALS_PETWELLNESSOWNERS AS
+WITH combined AS (
+
+  SELECT ADDRESS1 AS ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331
+  WHERE SEGMENT_NAME IN (
+    'Pets Avid Shopper',
+    'High Lifetime Value Pets Shopper',
+    'Female Pets Shopper',
+    'Pets Shopper - 90 Day Recency'
+  )
+  AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317
+  WHERE SEGMENT_NAME IN (
+    'Pets Avid Shopper',
+    'High Lifetime Value Pets Shopper',
+    'Female Pets Shopper',
+    'Pets Shopper - 90 Day Recency'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'Dog_Owners_L90D'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.CORE_SEGMENTS_20260413
+  WHERE SEGMENT_NAME IN (
+    'AnimalPetSupplies'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+),
+deduped AS (
+  SELECT ADDRESS, CITY, STATE, ZIP,
+    ROW_NUMBER() OVER (PARTITION BY ADDRESS, ZIP ORDER BY ADDRESS) AS rn
+  FROM combined
+)
+SELECT ADDRESS, CITY, STATE, ZIP FROM deduped WHERE rn = 1;
+
+
+-- ============================================================
+-- PACKAGE 5: Mom Wellness & Kids Health Precision
+-- ============================================================
+
+CREATE OR REPLACE TABLE PROXIMA.PUBLIC.SPEC_NORDICNATURALS_MOMWELLNESSKIDSHEALTHPRECISION AS
+WITH combined AS (
+
+  SELECT ADDRESS1 AS ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331
+  WHERE SEGMENT_NAME IN (
+    'Female Health Shopper',
+    'High Lifetime Value Children Shopper',
+    'Health Shopper with No Discount'
+  )
+  AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317
+  WHERE SEGMENT_NAME IN (
+    'Female Health Shopper',
+    'High Lifetime Value Children Shopper',
+    'Health Shopper with No Discount'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'Parents_of_Toddlers_&_Young_Children_L90D',
+    'Clean_&_Non-Toxic_Obsession_L90D',
+    'Working_Mothers_L60D'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+),
+deduped AS (
+  SELECT ADDRESS, CITY, STATE, ZIP,
+    ROW_NUMBER() OVER (PARTITION BY ADDRESS, ZIP ORDER BY ADDRESS) AS rn
+  FROM combined
+)
+SELECT ADDRESS, CITY, STATE, ZIP FROM deduped WHERE rn = 1;
+
+
+-- ============================================================
+-- PACKAGE 6: Back-to-School Mom Booster
+-- ============================================================
+
+CREATE OR REPLACE TABLE PROXIMA.PUBLIC.SPEC_NORDICNATURALS_BTSOMBOOSTER AS
+WITH combined AS (
+
+  SELECT ADDRESS1 AS ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_SEGMENTS_20260331
+  WHERE SEGMENT_NAME IN (
+    'Female Children Shopper',
+    'Children Avid Shopper',
+    'Female Health Shopper'
+  )
+  AND ADDRESS1 IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.SHOPPER360_HH_SEGMENTS_20260317
+  WHERE SEGMENT_NAME IN (
+    'Female Children Shopper',
+    'Children Avid Shopper',
+    'Female Health Shopper'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.LIFESTYLE_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'Working_Mothers_L90D',
+    'Parents_of_School-Age_Children_L90D'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+  UNION ALL
+
+  SELECT ADDRESS, CITY, STATE, ZIP
+  FROM PROXIMA.PUBLIC.PRODUCT_SEGMENTS_20260409
+  WHERE SEGMENT_NAME IN (
+    'HealthCareL90DayShopper'
+  )
+  AND ADDRESS IS NOT NULL AND ZIP IS NOT NULL
+
+),
+deduped AS (
+  SELECT ADDRESS, CITY, STATE, ZIP,
+    ROW_NUMBER() OVER (PARTITION BY ADDRESS, ZIP ORDER BY ADDRESS) AS rn
+  FROM combined
+)
+SELECT ADDRESS, CITY, STATE, ZIP FROM deduped WHERE rn = 1;
+
+
+-- ============================================================
+-- FINAL: ALL PACKAGE COUNTS IN ONE RESULT
+-- ============================================================
+
+SELECT 'Premium Pet Wellness Buyers'          AS PACKAGE_NAME, COUNT(*) AS SIZE FROM PROXIMA.PUBLIC.SPEC_NORDICNATURALS_PREMIUMPETWELLNESSBUYERS
+UNION ALL
+SELECT 'Back to School Mom Essentials'        AS PACKAGE_NAME, COUNT(*) AS SIZE FROM PROXIMA.PUBLIC.SPEC_NORDICNATURALS_BTSMOESSENTIALS
+UNION ALL
+SELECT 'Premium Pet Parent Health Advocates'  AS PACKAGE_NAME, COUNT(*) AS SIZE FROM PROXIMA.PUBLIC.SPEC_NORDICNATURALS_PREMIUMPETPARENTHEALTHADVOCATES
+UNION ALL
+SELECT 'Pet Wellness Owners'                  AS PACKAGE_NAME, COUNT(*) AS SIZE FROM PROXIMA.PUBLIC.SPEC_NORDICNATURALS_PETWELLNESSOWNERS
+UNION ALL
+SELECT 'Mom Wellness & Kids Health Precision' AS PACKAGE_NAME, COUNT(*) AS SIZE FROM PROXIMA.PUBLIC.SPEC_NORDICNATURALS_MOMWELLNESSKIDSHEALTHPRECISION
+UNION ALL
+SELECT 'Back-to-School Mom Booster'           AS PACKAGE_NAME, COUNT(*) AS SIZE FROM PROXIMA.PUBLIC.SPEC_NORDICNATURALS_BTSOMBOOSTER
+ORDER BY PACKAGE_NAME;
