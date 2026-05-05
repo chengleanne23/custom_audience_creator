@@ -205,6 +205,66 @@ async def snowflake_execute(request: Request):
     return {"ok": True, "counts": counts}
 
 
+# ── Local CSV save ───────────────────────────────────────────────────────────
+
+FILES_DIR = Path(__file__).parent.parent / "files"
+
+
+def _snowflake_save_local(tables: list, folder: Path) -> list:
+    import snowflake.connector
+    valid = re.compile(r'^PROXIMA\.PUBLIC\.SPEC_[A-Z0-9_]+$')
+    if not all(valid.match(t) for t in tables):
+        raise ValueError("Invalid table name")
+    folder.mkdir(parents=True, exist_ok=True)
+    conn = snowflake.connector.connect(
+        account=os.environ.get("SNOWFLAKE_ACCOUNT", ""),
+        user=os.environ.get("SNOWFLAKE_USER", ""),
+        password=os.environ.get("SNOWFLAKE_PASSWORD", ""),
+        database=os.environ.get("SNOWFLAKE_DATABASE", "PROXIMA"),
+        warehouse=os.environ.get("SNOWFLAKE_WAREHOUSE", ""),
+        role=os.environ.get("SNOWFLAKE_ROLE") or None,
+    )
+    saved = []
+    try:
+        for table in tables:
+            cur = conn.cursor()
+            cur.execute(f"SELECT * FROM {table}")
+            cols = [desc[0] for desc in cur.description]
+            filename = table.split(".")[-1].lower() + ".csv"
+            filepath = folder / filename
+            with open(filepath, "w", newline="", encoding="utf-8") as f:
+                writer = csv.writer(f)
+                writer.writerow(cols)
+                writer.writerows(cur)
+            saved.append(str(filepath))
+            cur.close()
+    finally:
+        conn.close()
+    return saved
+
+
+@app.post("/api/snowflake/save-local")
+async def snowflake_save_local(request: Request):
+    required = ["SNOWFLAKE_ACCOUNT", "SNOWFLAKE_USER", "SNOWFLAKE_PASSWORD"]
+    missing = [k for k in required if not os.environ.get(k)]
+    if missing:
+        raise HTTPException(status_code=503, detail=f"Snowflake not configured: {', '.join(missing)}")
+    body = await request.json()
+    tables = body.get("tables", [])
+    brand = re.sub(r"[^A-Z0-9]", "", (body.get("brand", "BRAND")).upper())
+    date = re.sub(r"[^0-9]", "", body.get("date", ""))
+    if not tables:
+        raise HTTPException(status_code=400, detail="tables required")
+    folder_name = f"{brand}_{date}" if date else brand
+    folder = FILES_DIR / folder_name
+    try:
+        loop = asyncio.get_event_loop()
+        saved = await loop.run_in_executor(None, _snowflake_save_local, tables, folder)
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    return {"ok": True, "folder": str(folder), "files": [Path(p).name for p in saved]}
+
+
 # ── Static files ─────────────────────────────────────────────────────────────
 
 @app.get("/")

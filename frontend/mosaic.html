@@ -1086,7 +1086,7 @@ function openExport() {
       <div class="export-pkg">
         <div class="export-pkg-name">${pkg.name}</div>
         <div class="export-pkg-desc">${combined}</div>
-        <div class="export-pkg-count">Audience size: TBD</div>
+        <div class="export-pkg-count">Est. Reach: ${estReach(pkg.approx_size)}</div>
       </div>`;
   });
 
@@ -1815,7 +1815,7 @@ function safeParseJSONArray(text) {
   try { return JSON.parse(clean.slice(start, end + 1)); } catch(e) { return null; }
 }
 
-function renderPackageCounts(counts, phase, iteration, warned) {
+function renderPackageCounts(counts, phase, iteration, warned, tableNames) {
   const warnedSet = new Set(warned || []);
   const container = document.getElementById('sql-counts');
   const rows = counts.map(c => {
@@ -1844,7 +1844,10 @@ function renderPackageCounts(counts, phase, iteration, warned) {
   if (warnedSet.size > 0) {
     warningHtml = `<div style="margin-top:12px;padding:10px 12px;background:rgba(232,103,122,0.1);border:1px solid rgba(232,103,122,0.3);border-radius:6px;font-size:12px;color:var(--accent2);">⚠ ${[...warnedSet].join(', ')} could not reach 6M after ${MAX_EXPAND_ITERATIONS} passes. Consider adding more audiences to these packages.</div>`;
   }
-  container.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">${phaseLabel}</div>${rows}${warningHtml}`;
+  const saveBtn = (phase === 'done' && tableNames?.length)
+    ? `<div style="margin-top:14px;"><button class="btn btn-ghost" id="save-local-btn" onclick="savePackagesLocally()" style="font-size:12px;width:100%;">⬇ Save CSVs Locally</button></div>`
+    : '';
+  container.innerHTML = `<div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:var(--accent);margin-bottom:10px;">${phaseLabel}</div>${rows}${warningHtml}${saveBtn}`;
   container.style.display = 'block';
 }
 
@@ -1950,8 +1953,11 @@ async function runOnSnowflake() {
     const data2 = await r2.json();
     if (!r2.ok || !data2.ok) { showToast(data2.detail || 'Snowflake error — check server logs'); return; }
 
+    const tableNames = passing.map(pkg => buildPackageSQL(pkg, brand).outputTable);
+    modal._tableNames = tableNames;
+    modal._brand = brand;
     if (data2.counts?.length) {
-      renderPackageCounts(data2.counts, 'done', 0, warned);
+      renderPackageCounts(data2.counts, 'done', 0, warned, tableNames);
       showToast('Tables created! Final counts below.');
     } else {
       showToast('Tables created successfully.');
@@ -1974,6 +1980,13 @@ async function runOnSnowflake() {
           }
         }
       } catch(e) { console.error('Failed to save approx sizes:', e); }
+      // Also update in-memory allPackages so Client Export reflects the sizes
+      lastCounts.forEach(c => {
+        if (!warned.includes(c.package)) {
+          const pkg = allPackages.find(p => p.name === c.package);
+          if (pkg) pkg.approx_size = c.size;
+        }
+      });
     }
 
   } catch(e) {
@@ -1984,6 +1997,34 @@ async function runOnSnowflake() {
     btn.disabled = false;
   }
 }
+async function savePackagesLocally() {
+  const modal = document.getElementById('sql-modal');
+  const tables = modal._tableNames || [];
+  const brand = modal._brand || '';
+  const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
+  if (!tables.length) { showToast('No tables to save'); return; }
+  const btn = document.getElementById('save-local-btn');
+  if (btn) { btn.textContent = '⏳ Saving...'; btn.disabled = true; }
+  try {
+    const r = await fetch('/api/snowflake/save-local', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ tables, brand, date }),
+    });
+    const data = await r.json();
+    if (data.ok) {
+      showToast(`Saved ${data.files.length} file(s) → files/${brand.toUpperCase()}_${date}/`);
+    } else {
+      showToast(data.detail || 'Save failed — check server logs');
+    }
+  } catch(e) {
+    showToast('Save error — check server logs');
+    console.error(e);
+  } finally {
+    if (btn) { btn.textContent = '⬇ Save CSVs Locally'; btn.disabled = false; }
+  }
+}
+
 document.addEventListener('click', e => {
   const modal = document.getElementById('sql-modal');
   if (e.target === modal) closeSQL();
